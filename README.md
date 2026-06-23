@@ -1,5 +1,13 @@
 # NEXTU FileShare
 
+## Présentation du projet
+
+NEXTU-FileShare est une application web sécurisée de gestion et de partage de fichiers, développée dans le cadre des travaux de fin de cours N4 — NEXTU-LILLE.
+
+Elle permet à chaque utilisateur de déposer, télécharger et partager des documents avec ses collaborateurs. Un administrateur peut en outre créer et supprimer des comptes utilisateurs. L'application repose sur une architecture microservices composée d'un Frontend React, d'une passerelle BFF Spring Cloud Gateway, d'un service de stockage Spring Boot, d'un serveur d'identité Keycloak, et d'une base de données PostgreSQL.
+
+---
+
 Secure online file management and sharing platform built for NEXTU-LILLE N4. Users can upload files, share them with colleagues, and manage access through role-based permissions.
 
 ## Features
@@ -27,11 +35,15 @@ bff-gateway (:8090)
 |-----------|------|------|
 | Frontend | `frontend/` | 5173 |
 | BFF Gateway | `backend/bff-gateway/` | 8090 |
-| Storage API | `backend/storage-service/` | 8081 |
+| Storage API | `backend/storage-service/` | 8081 (internal) |
 | Keycloak | `backend/keycloak/` | 8180 |
 | Postgres | Docker | 5432 |
 
 The browser talks **only** to the BFF gateway. The storage service is internal and never called directly from the client.
+
+### Maven layout
+
+Two **sibling** Spring Boot projects under `backend/` (`bff-gateway`, `storage-service`) — no parent POM. Each service builds and deploys independently.
 
 ## Prerequisites
 
@@ -43,9 +55,16 @@ The browser talks **only** to the BFF gateway. The storage service is internal a
 
 ### 1. Start the backend stack
 
+From the repository root:
+
 ```bash
-cd backend
 docker compose up --build
+```
+
+Or from `backend/`:
+
+```bash
+cd backend && docker compose up --build
 ```
 
 Wait until all services are healthy (~2–3 minutes on first build).
@@ -54,7 +73,6 @@ Wait until all services are healthy (~2–3 minutes on first build).
 |-----|-------------|
 | http://localhost:8090 | BFF Gateway (API + OAuth2) |
 | http://localhost:8180 | Keycloak admin console |
-| http://localhost:8081 | Storage service (internal) |
 
 ### 2. Start the frontend
 
@@ -76,28 +94,75 @@ Open http://localhost:5173 in your browser.
 
 Keycloak admin console: http://localhost:8180/admin (`admin` / `admin`)
 
-Self-registration is enabled — new users receive the `USER` role automatically.
+Self-registration is enabled on the `nextu-files` realm — new users receive the `USER` role automatically.
+
+## curl examples
+
+### 1. Login (browser redirect)
+
+```bash
+open "http://localhost:8090/oauth2/authorization/keycloak"
+```
+
+Log in as `alice` / `password`. On success you are redirected to the frontend and receive a session cookie (`SESSION`).
+
+### 2. List files (requires session cookie)
+
+After logging in via browser, copy the `SESSION` cookie from DevTools:
+
+```bash
+curl -s -b "SESSION=<your-session-cookie>" http://localhost:8090/api/files | jq
+```
+
+### 3. Upload a file
+
+```bash
+curl -s -b "SESSION=<cookie>" \
+  -F "file=@./sample.pdf" \
+  http://localhost:8090/api/files | jq
+```
+
+### 4. Share a file
+
+```bash
+curl -s -b "SESSION=<cookie>" \
+  -H "Content-Type: application/json" \
+  -d '{"targetUserId":"<bob-uuid-from-/api/users>"}' \
+  http://localhost:8090/api/files/<file-id>/share | jq
+```
+
+### 5. Admin — create user (as admin.smith)
+
+```bash
+curl -s -b "SESSION=<admin-cookie>" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"charlie","email":"charlie@nextu.fr","role":"USER"}' \
+  http://localhost:8090/api/admin/users | jq
+```
+
+The response includes a one-time `temporaryPassword` field for the admin to share with the new user.
 
 ## Project structure
 
 ```
-├── frontend/          React 19, Vite, TypeScript, Tailwind
+├── frontend/              React 19, Vite, TypeScript, Tailwind
 │   └── src/
-│       ├── pages/     Dashboard, login, admin
-│       ├── services/  API and auth integration
-│       └── types/     Shared TypeScript interfaces
+│       ├── pages/         Dashboard, login, admin
+│       ├── services/      API and auth integration
+│       └── types/         Shared TypeScript interfaces
 ├── backend/
 │   ├── bff-gateway/       OAuth2 BFF, user directory, admin API
 │   ├── storage-service/   File storage API, Postgres, Flyway
 │   ├── keycloak/          Realm import (nextu-files)
 │   ├── docker/            Postgres init scripts
 │   └── docker-compose.yml
+├── docker-compose.yml     Includes backend stack (run from root)
 └── .env.example           Local dev port configuration
 ```
 
 ## Configuration
 
-Copy `.env.example` to `frontend/.env.local` and adjust ports if needed. The Vite dev server proxies `/api`, `/oauth2`, `/login`, and `/logout` to the BFF gateway on port 8090.
+Copy `frontend/.env.example` to `frontend/.env` and adjust `VITE_KEYCLOAK_REGISTRATION_URL` if needed. Copy `.env.example` to `frontend/.env.local` and adjust ports if needed. The Vite dev server proxies `/api`, `/oauth2`, `/login`, and `/logout` to the BFF gateway on port 8090.
 
 After Keycloak starts, sync OAuth redirect URIs for local dev:
 
@@ -118,6 +183,23 @@ cd frontend && npm run build
 cd backend/bff-gateway && mvn -q -DskipTests compile
 cd backend/storage-service && mvn -q -DskipTests compile
 ```
+
+See [backend/BACKEND.md](backend/BACKEND.md) for API reference, troubleshooting, and local dev without Docker.
+
+## Two things to change in the frontend to go live
+
+The React UI is already built. To connect it to this backend, only two configuration values need attention:
+
+| Setting | Dev value | Notes |
+|---------|-----------|-------|
+| **Vite dev proxy target** | `http://localhost:8090` | In `frontend/vite.config.ts` — proxies `/api`, `/oauth2`, `/login`, `/logout` |
+| **Keycloak registration URL** | `http://localhost:8180/realms/nextu-files/protocol/openid-connect/registrations` | Set via `VITE_KEYCLOAK_REGISTRATION_URL` in `frontend/.env` — used by the login page “S'inscrire” link |
+
+No component code or JSON field names need to change. `fetch(..., { credentials: 'include' })` is already set in `auth.ts` and `api.ts`.
+
+## Self-registration (Req 6)
+
+The login page includes a **S'inscrire** link pointing to `VITE_KEYCLOAK_REGISTRATION_URL` (see `frontend/.env.example`). User registration is enabled in the Keycloak realm. In production, update the env var to your public Keycloak base URL.
 
 ## License
 
