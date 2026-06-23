@@ -2,10 +2,11 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: nextu-postgres
+    restart: unless-stopped  # auto-recover after crash or host restart
     environment:
       POSTGRES_DB: nextu_files
       POSTGRES_USER: nextu
-      POSTGRES_PASSWORD: nextu
+      POSTGRES_PASSWORD: nextu  # dev-only credentials — replace with secrets manager in production
     ports:
       - "5432:5432"
     volumes:
@@ -36,6 +37,7 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
     container_name: nextu-keycloak
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,7 +47,7 @@ services:
       KC_DB_USERNAME: nextu
       KC_DB_PASSWORD: nextu
       KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin  # dev-only credentials — replace with secrets manager in production
       KC_HOSTNAME: localhost
       KC_HOSTNAME_PORT: 8180
       KC_HOSTNAME_STRICT: "false"
@@ -68,6 +70,7 @@ services:
     build:
       context: ./storage-service
     container_name: nextu-storage-service
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
@@ -86,7 +89,7 @@ services:
       KEYCLOAK_ADMIN_SERVER_URL: http://keycloak:8080
       KEYCLOAK_REALM: nextu-files
       KEYCLOAK_ADMIN_CLIENT_ID: admin-cli-service
-      KEYCLOAK_ADMIN_CLIENT_SECRET: admin-cli-service-secret
+      KEYCLOAK_ADMIN_CLIENT_SECRET: admin-cli-service-secret  # dev-only secret — replace with vault or Docker secrets in production
     volumes:
       - storage_data:/data/storage
     healthcheck:
@@ -100,7 +103,7 @@ services:
     build:
       context: ./bff-gateway
     container_name: nextu-bff-gateway
-    restart: on-failure
+    restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -116,11 +119,11 @@ services:
       KEYCLOAK_JWK_SET_URI: http://host.docker.internal:8180/realms/nextu-files/protocol/openid-connect/certs
       KEYCLOAK_USERINFO_URI: http://host.docker.internal:8180/realms/nextu-files/protocol/openid-connect/userinfo
       KEYCLOAK_CLIENT_ID: gateway-client
-      KEYCLOAK_CLIENT_SECRET: gateway-client-secret
+      KEYCLOAK_CLIENT_SECRET: gateway-client-secret  # dev-only secret — replace with vault or Docker secrets in production
       KEYCLOAK_ADMIN_SERVER_URL: http://keycloak:8080
       KEYCLOAK_REALM: nextu-files
       KEYCLOAK_ADMIN_CLIENT_ID: admin-cli-service
-      KEYCLOAK_ADMIN_CLIENT_SECRET: admin-cli-service-secret
+      KEYCLOAK_ADMIN_CLIENT_SECRET: admin-cli-service-secret  # dev-only secret — replace with vault or Docker secrets in production
       CORS_ALLOWED_ORIGINS: http://localhost:5173
       OAUTH2_REDIRECT_URI: http://localhost:5173/login/oauth2/code/{registrationId}
     ports:

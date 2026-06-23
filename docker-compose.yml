@@ -1,0 +1,3 @@
+# Full stack — run from repo root: docker compose up --build
+include:
+  - path: backend/docker-compose.yml
