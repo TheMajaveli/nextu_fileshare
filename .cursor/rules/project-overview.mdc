@@ -1,0 +1,30 @@
+---
+description: NEXTU FileShare project overview — architecture, stack, and conventions
+alwaysApply: true
+---
+
+# NEXTU FileShare
+
+Multi-service file sharing app: React frontend + Spring BFF + JWT storage API + Keycloak.
+
+## Structure
+
+| Path | Role |
+|------|------|
+| `frontend/src/` | React 19 + Vite + TypeScript frontend |
+| `backend/bff-gateway/` | OAuth2 BFF (session cookie, proxies `/api/files/**`) |
+| `backend/storage-service/` | File API (JWT resource server, Postgres, Flyway) |
+| `backend/keycloak/` | Realm import `nextu-files` |
+| `backend/docker-compose.yml` | Full backend stack orchestration |
+
+## Rules
+
+1. Browser calls **BFF only** (`:8090`); never storage-service from the client.
+2. Wire frontend via `frontend/src/services/auth.ts` and `frontend/src/services/api.ts` — keep `frontend/src/types/` stable.
+3. User identity lives in Keycloak; file metadata in Postgres.
+4. Error responses: `{ "error": "CODE", "message": "..." }`.
+5. Roles: `USER`, `ADMIN` (Keycloak realm roles → `ROLE_*` in Spring).
+
+## Agents
+
+Custom subagents live in `.cursor/agents/`. See `agent-review-pipeline` rule for when to run them.

@@ -1,0 +1,33 @@
+---
+description: Security baseline for NEXTU FileShare — auth, secrets, file handling
+alwaysApply: true
+---
+
+# Security baseline
+
+## Secrets
+
+- Never commit `.env`, real client secrets, or production passwords.
+- Dev secrets in `docker-compose.yml` and `keycloak/realm-nextu-files.json` are local-only.
+- Use `.env.example` for documentation; load via Spring env / Vite env.
+
+## Auth
+
+- BFF: session cookie, OAuth2 login with Keycloak, `@PreAuthorize` on admin routes.
+- Storage: stateless JWT; roles via `KeycloakRealmRoleConverter`.
+- Principal claim: JWT `sub` as user UUID.
+
+## File operations
+
+- Allowlist extensions server-side in `FileService` (not UI-only).
+- Enforce size limit (25 MB) before writing to disk.
+- Normalize storage paths; reject path traversal.
+- Owner-only delete/share; verify share target exists.
+
+## API
+
+- No stack traces or internal paths in client error messages.
+- Admin cannot delete own account.
+- CORS: explicit origins from config; credentials only for trusted frontend origin.
+
+When touching security-sensitive code, invoke `security-reviewer` before finishing.

@@ -1,0 +1,50 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: storage-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/nextu_storage}
+    username: ${SPRING_DATASOURCE_USERNAME:nextu}
+    password: ${SPRING_DATASOURCE_PASSWORD:nextu}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 26MB
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/nextu-files}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/nextu-files/protocol/openid-connect/certs}
+
+storage:
+  base-path: ${STORAGE_BASE_PATH:/data/storage}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+keycloak:
+  admin:
+    server-url: ${KEYCLOAK_ADMIN_SERVER_URL:http://localhost:8180}
+    realm: ${KEYCLOAK_REALM:nextu-files}
+    client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:admin-cli-service}
+    client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:admin-cli-service-secret}
+
+logging:
+  level:
+    org.springframework.security: INFO

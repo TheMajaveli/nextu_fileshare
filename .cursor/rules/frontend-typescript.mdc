@@ -1,0 +1,41 @@
+---
+description: React and TypeScript conventions for NEXTU FileShare frontend
+globs: frontend/src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Frontend standards
+
+## Structure
+
+- Pages in `src/pages/`, shared UI in `src/components/`
+- Server/auth state: `src/context/`, API calls in `src/services/`
+- Shared types: `src/types/index.ts` — do not duplicate
+
+## API integration
+
+```typescript
+// Real BFF calls (when wired)
+fetch('/api/me', { credentials: 'include' })
+```
+
+- Proxy in `frontend/vite.config.ts` → `http://localhost:8090`
+- Parse errors as `{ error, message }` for toasts
+- OAuth login: `window.location.href = '/oauth2/authorization/keycloak'`
+
+## React
+
+- Functional components; extract hooks for reusable logic
+- Use `ProtectedRoute` / `AdminRoute` for auth gates
+- Prefer React Query for server state when caching helps
+
+## TypeScript
+
+- Strict types; no `any` without justification
+- Export types from `src/types/` for API contracts
+
+## Do not
+
+- Call storage-service URL from the browser
+- Put secrets in frontend env exposed to the client bundle
+- Change component props/interfaces when wiring mock → real API

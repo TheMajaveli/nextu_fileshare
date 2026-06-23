@@ -1,0 +1,35 @@
+---
+description: Spring Boot conventions for bff-gateway and storage-service
+globs: "{backend/bff-gateway,backend/storage-service}/**/*.java"
+alwaysApply: false
+---
+
+# Backend standards
+
+## Module boundaries
+
+- **bff-gateway**: OAuth2 session, user directory, admin user CRUD, gateway proxy to storage
+- **storage-service**: files, shares, Flyway migrations — no Keycloak user management
+
+## Java / Spring
+
+- Constructor injection; `@Service` / `@RestController` / `@Configuration`
+- DTOs in `model/dto` (storage) or `model/` (gateway); entities in `model/entity`
+- Throw `ApiException` with error code + French message; handled by `GlobalExceptionHandler`
+- `@Transactional` on services; `@Transactional(readOnly = true)` for queries
+- `@PreAuthorize("hasRole('ADMIN')")` on admin endpoints
+
+## Security
+
+- Gateway: WebFlux security, CSRF disabled (API + OAuth), CORS from `CorsProperties`
+- Storage: JWT resource server, stateless sessions, method security enabled
+
+## Persistence
+
+- Schema changes only via Flyway in `storage-service/src/main/resources/db/migration/`
+- Use JPA repositories; avoid native SQL unless necessary
+
+## Naming
+
+- Package: `com.nextu.fileshare.{gateway|storage}`
+- REST paths: `/api/files`, `/api/admin/users`, `/api/me`, `/api/users`

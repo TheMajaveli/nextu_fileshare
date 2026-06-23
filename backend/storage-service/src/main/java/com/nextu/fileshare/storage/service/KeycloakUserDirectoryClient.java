@@ -1,0 +1,71 @@
+package com.nextu.fileshare.storage.service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.nextu.fileshare.storage.config.KeycloakAdminProperties;
+import com.nextu.fileshare.storage.exception.ApiException;
+import java.time.Instant;
+import java.util.UUID;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
+
+@Service
+public class KeycloakUserDirectoryClient {
+
+    private final WebClient webClient;
+    private final KeycloakAdminProperties properties;
+    private volatile String cachedToken;
+    private volatile Instant tokenExpiresAt = Instant.EPOCH;
+
+    public KeycloakUserDirectoryClient(KeycloakAdminProperties properties) {
+        this.properties = properties;
+        this.webClient = WebClient.builder().baseUrl(properties.getServerUrl()).build();
+    }
+
+    public String resolveUsername(UUID userId) {
+        String token = serviceAccountToken();
+        JsonNode user = webClient.get()
+            .uri("/admin/realms/{realm}/users/{id}", properties.getRealm(), userId)
+            .headers(headers -> headers.setBearerAuth(token))
+            .retrieve()
+            .bodyToMono(JsonNode.class)
+            .block();
+
+        if (user == null || user.path("username").isMissingNode()) {
+            throw new ApiException("USER_NOT_FOUND", "Utilisateur destinataire introuvable.", HttpStatus.NOT_FOUND.value());
+        }
+        return user.get("username").asText();
+    }
+
+    private synchronized String serviceAccountToken() {
+        if (cachedToken != null && Instant.now().isBefore(tokenExpiresAt.minusSeconds(30))) {
+            return cachedToken;
+        }
+
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("grant_type", "client_credentials");
+        form.add("client_id", properties.getClientId());
+        form.add("client_secret", properties.getClientSecret());
+
+        JsonNode response = webClient.post()
+            .uri("/realms/{realm}/protocol/openid-connect/token", properties.getRealm())
+            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .body(BodyInserters.fromFormData(form))
+            .retrieve()
+            .bodyToMono(JsonNode.class)
+            .block();
+
+        if (response == null || response.path("access_token").isMissingNode()) {
+            throw new ApiException("KEYCLOAK_ERROR", "Impossible de contacter l'annuaire utilisateurs.", HttpStatus.BAD_GATEWAY.value());
+        }
+
+        cachedToken = response.get("access_token").asText();
+        int expiresIn = response.path("expires_in").asInt(300);
+        tokenExpiresAt = Instant.now().plusSeconds(expiresIn);
+        return cachedToken;
+    }
+}

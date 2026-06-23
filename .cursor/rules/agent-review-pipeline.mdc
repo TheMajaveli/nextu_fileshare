@@ -1,0 +1,33 @@
+---
+description: Review agent pipeline — when and how to run quality, security, and architecture checks
+alwaysApply: true
+---
+
+# Agent review pipeline
+
+After **implementing features**, **refactors**, or **bugfixes**, run reviews before claiming work is complete.
+
+## Automatic triggers
+
+| Situation | Agents (parallel when possible) |
+|-----------|----------------------------------|
+| Feature or bugfix done | `code-reviewer`, `security-reviewer`, `clean-code-reviewer` |
+| Auth, OAuth, Keycloak, CORS, admin API | also `security-reviewer` (mandatory) |
+| New endpoints, service split, Docker | also `architecture-reviewer` |
+| Dependency or config change | `best-practices-reviewer` |
+| User asks "how does X work" / onboarding | `project-context` |
+| Before commit / PR / "done" | `verifier` |
+
+## Invocation
+
+- Delegate via Task/subagent: `/code-reviewer`, `/security-reviewer`, etc.
+- Or: "Use the security-reviewer subagent on these changes"
+- Run independent reviewers **in parallel**; run `verifier` **last** after fixes.
+
+## Playbook files
+
+Detailed prompts: `.cursor/agents/*.md`
+
+## Fix policy
+
+Reviewers are **readonly** except `verifier`. Apply Critical/High security and correctness findings before marking complete. Summarize review results in a compact table for the user.
