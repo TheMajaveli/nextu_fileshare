@@ -28,9 +28,19 @@ spring:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/nextu-files}
           jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/nextu-files/protocol/openid-connect/certs}
+          audiences: nextu-files-storage
 
 storage:
   base-path: ${STORAGE_BASE_PATH:/data/storage}
+  max-size-bytes: 26214400   # 25 MB
+  allowed-extensions:
+    - pdf
+    - xlsx
+    - xls
+    - doc
+    - docx
+    - mp3
+    - mp4
 
 management:
   endpoints:

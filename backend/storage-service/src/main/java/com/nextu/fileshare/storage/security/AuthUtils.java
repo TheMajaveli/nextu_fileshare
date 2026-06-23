@@ -7,14 +7,19 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
+/**
+ * Utility methods for reading user identity and roles from JWT authentication.
+ */
 public final class AuthUtils {
 
     private AuthUtils() {}
 
+    /** Returns the current user's UUID parsed from the JWT subject claim. */
     public static UUID currentUserId(Authentication authentication) {
         return UUID.fromString(authentication.getName());
     }
 
+    /** Returns the preferred username from the JWT, falling back to the subject. */
     public static String currentUsername(Authentication authentication) {
         if (authentication instanceof JwtAuthenticationToken token) {
             Jwt jwt = token.getToken();
@@ -27,6 +32,7 @@ public final class AuthUtils {
     }
 
     @SuppressWarnings("unchecked")
+    /** Returns realm role names from the JWT, or an empty list when absent. */
     public static List<String> currentRoles(Authentication authentication) {
         if (authentication instanceof JwtAuthenticationToken token) {
             Jwt jwt = token.getToken();

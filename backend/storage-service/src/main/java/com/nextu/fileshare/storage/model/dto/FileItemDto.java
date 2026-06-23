@@ -2,6 +2,7 @@ package com.nextu.fileshare.storage.model.dto;
 
 import java.util.List;
 
+/** File metadata and share list returned by the storage API. */
 public record FileItemDto(
     String id,
     String filename,

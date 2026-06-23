@@ -11,6 +11,9 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * JPA entity representing a share grant from a file owner to another user.
+ */
 @Entity
 @Table(name = "file_shares")
 public class FileShareEntity {

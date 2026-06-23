@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+/**
+ * Maps application and framework exceptions to consistent JSON error responses.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

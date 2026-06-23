@@ -3,6 +3,9 @@ package com.nextu.fileshare.storage.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Binds Keycloak Admin API client settings from {@code keycloak.admin.*} properties.
+ */
 @Configuration
 @ConfigurationProperties(prefix = "keycloak.admin")
 public class KeycloakAdminProperties {

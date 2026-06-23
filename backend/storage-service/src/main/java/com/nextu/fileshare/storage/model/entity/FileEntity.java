@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * JPA entity representing a stored file and its metadata on disk.
+ */
 @Entity
 @Table(name = "files")
 public class FileEntity {

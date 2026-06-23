@@ -26,6 +26,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * REST controller for file upload, download, listing, sharing, and deletion.
+ */
 @RestController
 @RequestMapping("/files")
 public class FileController {
@@ -38,18 +41,21 @@ public class FileController {
         this.userDirectoryClient = userDirectoryClient;
     }
 
+    /** Lists files owned by the authenticated user. */
     @GetMapping
     public List<FileItemDto> listMyFiles(Authentication authentication) {
         UUID ownerId = AuthUtils.currentUserId(authentication);
         return fileService.listMyFiles(ownerId);
     }
 
+    /** Lists files shared with the authenticated user. */
     @GetMapping("/shared")
     public List<FileItemDto> listSharedWithMe(Authentication authentication) {
         UUID userId = AuthUtils.currentUserId(authentication);
         return fileService.listSharedWithMe(userId);
     }
 
+    /** Uploads a multipart file for the authenticated owner. */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public FileItemDto uploadFile(
         @RequestParam("file") MultipartFile file,
@@ -60,6 +66,7 @@ public class FileController {
         return fileService.uploadFile(file, ownerId, ownerUsername);
     }
 
+    /** Streams a file download when the requester has access. */
     @GetMapping("/{id}/download")
     public ResponseEntity<Resource> downloadFile(
         @PathVariable UUID id,
@@ -74,6 +81,7 @@ public class FileController {
             .body(download.resource());
     }
 
+    /** Deletes a file when the authenticated user is the owner. */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteFile(
         @PathVariable UUID id,
@@ -84,6 +92,7 @@ public class FileController {
         return ResponseEntity.noContent().build();
     }
 
+    /** Shares a file with another user resolved via Keycloak. */
     @PostMapping("/{id}/share")
     public FileItemDto shareFile(
         @PathVariable UUID id,
@@ -104,6 +113,7 @@ public class FileController {
         }
     }
 
+    /** Revokes a user's access to a shared file. */
     @DeleteMapping("/{id}/share/{userId}")
     public FileItemDto revokeShare(
         @PathVariable UUID id,

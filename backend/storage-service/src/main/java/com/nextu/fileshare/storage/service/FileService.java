@@ -16,6 +16,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
@@ -23,19 +24,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * Core file storage service handling upload, download, sharing, and on-disk persistence.
+ */
 @Service
 @Transactional
 public class FileService {
 
-    private static final long MAX_SIZE_BYTES = 25L * 1024 * 1024;
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
-        "pdf", "xlsx", "xls", "doc", "docx", "mp3", "mp4"
-    );
-
     private final FileRepository fileRepository;
     private final FileShareRepository fileShareRepository;
     private final Path storageRoot;
+    private final long maxSizeBytes;
+    private final Set<String> allowedExtensions;
 
+    /** Creates the service and ensures the configured storage directory exists. */
     public FileService(
         FileRepository fileRepository,
         FileShareRepository fileShareRepository,
@@ -44,9 +46,14 @@ public class FileService {
         this.fileRepository = fileRepository;
         this.fileShareRepository = fileShareRepository;
         this.storageRoot = Path.of(storageProperties.getBasePath()).toAbsolutePath().normalize();
+        this.maxSizeBytes = storageProperties.getMaxSizeBytes();
+        this.allowedExtensions = storageProperties.getAllowedExtensions().stream()
+            .map(String::toLowerCase)
+            .collect(Collectors.toUnmodifiableSet());
         Files.createDirectories(storageRoot);
     }
 
+    /** Lists files owned by the given user, including share recipients. */
     @Transactional(readOnly = true)
     public List<FileItemDto> listMyFiles(UUID ownerId) {
         return fileRepository.findOwnedWithShares(ownerId).stream()
@@ -54,6 +61,7 @@ public class FileService {
             .toList();
     }
 
+    /** Lists files shared with the given user. */
     @Transactional(readOnly = true)
     public List<FileItemDto> listSharedWithMe(UUID userId) {
         return fileRepository.findSharedWithUser(userId).stream()
@@ -61,6 +69,7 @@ public class FileService {
             .toList();
     }
 
+    /** Validates, stores, and persists an uploaded file for the given owner. */
     public FileItemDto uploadFile(MultipartFile file, UUID ownerId, String ownerUsername) {
         if (file == null || file.isEmpty()) {
             throw new ApiException("INVALID_FILE", "Aucun fichier fourni.", HttpStatus.BAD_REQUEST.value());
@@ -72,7 +81,7 @@ public class FileService {
         }
 
         String extension = extractExtension(originalFilename);
-        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+        if (!allowedExtensions.contains(extension)) {
             throw new ApiException(
                 "INVALID_FILE_TYPE",
                 "Le type de fichier ." + extension + " n'est pas autorisé.",
@@ -80,7 +89,7 @@ public class FileService {
             );
         }
 
-        if (file.getSize() > MAX_SIZE_BYTES) {
+        if (file.getSize() > maxSizeBytes) {
             throw new ApiException(
                 "FILE_TOO_LARGE",
                 "Le fichier dépasse la taille maximale autorisée de 25 Mo.",
@@ -111,6 +120,7 @@ public class FileService {
         return toDto(fileRepository.save(entity));
     }
 
+    /** Loads a downloadable resource when the requester owns or has access to the file. */
     @Transactional(readOnly = true)
     public DownloadResult downloadFile(UUID fileId, UUID requesterId) {
         FileEntity entity = requireAccessibleFile(fileId, requesterId);
@@ -118,6 +128,7 @@ public class FileService {
         return new DownloadResult(resource, entity.getFilename());
     }
 
+    /** Deletes a file from disk and the database when the caller is the owner. */
     public void deleteFile(UUID fileId, UUID ownerId) {
         FileEntity entity = requireFile(fileId);
         if (!entity.getOwnerId().equals(ownerId)) {
@@ -128,6 +139,7 @@ public class FileService {
         fileRepository.delete(entity);
     }
 
+    /** Grants another user access to a file owned by the caller. */
     public FileItemDto shareFile(UUID fileId, UUID ownerId, UUID targetUserId, String targetUsername) {
         FileEntity entity = requireFile(fileId);
         if (!entity.getOwnerId().equals(ownerId)) {
@@ -160,6 +172,7 @@ public class FileService {
             .orElse(entity));
     }
 
+    /** Removes a user's share access to a file owned by the caller. */
     public FileItemDto revokeShare(UUID fileId, UUID ownerId, UUID sharedUserId) {
         FileEntity entity = requireFile(fileId);
         if (!entity.getOwnerId().equals(ownerId)) {
@@ -209,7 +222,9 @@ public class FileService {
     private FileEntity requireAccessibleFile(UUID fileId, UUID requesterId) {
         FileEntity entity = requireFile(fileId);
         if (!canAccess(entity, requesterId)) {
-            throw new ApiException("FORBIDDEN", "Action non autorisée.", HttpStatus.FORBIDDEN.value());
+            // Return 404 (not 403) for unauthorized access to prevent UUID enumeration.
+            // An attacker should not distinguish "file doesn't exist" from "no access".
+            throw new ApiException("NOT_FOUND", "Fichier introuvable.", HttpStatus.NOT_FOUND.value());
         }
         return entity;
     }
@@ -218,7 +233,7 @@ public class FileService {
         try {
             Path path = Path.of(entity.getStoragePath()).normalize();
             if (!path.startsWith(storageRoot)) {
-                throw new ApiException("FORBIDDEN", "Action non autorisée.", HttpStatus.FORBIDDEN.value());
+                throw new ApiException("NOT_FOUND", "Fichier introuvable.", HttpStatus.NOT_FOUND.value());
             }
             Resource resource = new UrlResource(path.toUri());
             if (!resource.exists() || !resource.isReadable()) {
@@ -261,5 +276,6 @@ public class FileService {
         );
     }
 
+    /** Download payload pairing the file resource with its original filename. */
     public record DownloadResult(Resource resource, String filename) {}
 }
