@@ -7,7 +7,7 @@ server:
       cookie:
         same-site: lax
         http-only: true
-        secure: false
+        secure: false  # false for local HTTP dev — set true in production with HTTPS
 
 spring:
   application:

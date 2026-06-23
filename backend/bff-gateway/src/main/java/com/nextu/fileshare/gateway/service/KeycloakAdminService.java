@@ -3,11 +3,14 @@ package com.nextu.fileshare.gateway.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.nextu.fileshare.gateway.common.AppRoles;
 import com.nextu.fileshare.gateway.config.KeycloakAdminProperties;
 import com.nextu.fileshare.gateway.exception.ApiException;
+import com.nextu.fileshare.gateway.exception.KeycloakServiceException;
 import com.nextu.fileshare.gateway.model.AppUserDto;
 import com.nextu.fileshare.gateway.model.CreateUserRequest;
 import com.nextu.fileshare.gateway.model.CreateUserResponse;
+import com.nextu.fileshare.gateway.model.UserSummaryDto;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -23,10 +26,13 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+/**
+ * Service integrating with the Keycloak Admin REST API for user management and lookups.
+ */
 @Service
 public class KeycloakAdminService {
 
-    private static final List<String> APP_ROLES = List.of("USER", "ADMIN");
+    private static final List<String> APP_ROLES = List.of(AppRoles.USER, AppRoles.ADMIN);
 
     private final WebClient webClient;
     private final KeycloakAdminProperties properties;
@@ -34,20 +40,85 @@ public class KeycloakAdminService {
     private volatile String cachedToken;
     private volatile Instant tokenExpiresAt = Instant.EPOCH;
 
+    /** Creates the service with Keycloak admin properties and JSON mapping support. */
     public KeycloakAdminService(KeycloakAdminProperties properties, ObjectMapper objectMapper) {
         this.properties = properties;
         this.objectMapper = objectMapper;
         this.webClient = WebClient.builder().baseUrl(properties.getServerUrl()).build();
     }
 
+    /** Returns the ISO-8601 creation timestamp for the given Keycloak user id. */
+    public String getUserCreatedAt(String userId) {
+        String token = serviceAccountToken();
+        try {
+            JsonNode user = webClient.get()
+                .uri("/admin/realms/{realm}/users/{id}", properties.getRealm(), userId)
+                .headers(headers -> headers.setBearerAuth(token))
+                .retrieve()
+                .bodyToMono(JsonNode.class)
+                .block();
+            if (user == null || user.isMissingNode()) {
+                throw new ApiException("NOT_FOUND", "Utilisateur introuvable.", HttpStatus.NOT_FOUND.value());
+            }
+            long createdTimestamp = user.path("createdTimestamp").asLong(0);
+            if (createdTimestamp <= 0) {
+                throw new ApiException("KEYCLOAK_ERROR", "Date de création utilisateur indisponible.", HttpStatus.BAD_GATEWAY.value());
+            }
+            return Instant.ofEpochMilli(createdTimestamp).toString();
+        } catch (WebClientResponseException.NotFound ex) {
+            throw new ApiException("NOT_FOUND", "Utilisateur introuvable.", HttpStatus.NOT_FOUND.value());
+        } catch (WebClientResponseException ex) {
+            throw keycloakUnavailable(ex);
+        }
+    }
+
+    private KeycloakServiceException keycloakUnavailable(WebClientResponseException ex) {
+        return new KeycloakServiceException("Keycloak Admin API error", ex);
+    }
+
+    /** Fetches a single realm user mapped to an application user DTO. */
+    public AppUserDto getUserById(String userId) {
+        String token = serviceAccountToken();
+        try {
+            JsonNode user = webClient.get()
+                .uri("/admin/realms/{realm}/users/{id}", properties.getRealm(), userId)
+                .headers(headers -> headers.setBearerAuth(token))
+                .retrieve()
+                .bodyToMono(JsonNode.class)
+                .block();
+            if (user == null || user.isMissingNode()) {
+                throw new ApiException("NOT_FOUND", "Utilisateur introuvable.", HttpStatus.NOT_FOUND.value());
+            }
+            return mapUser(user, token);
+        } catch (WebClientResponseException.NotFound ex) {
+            throw new ApiException("NOT_FOUND", "Utilisateur introuvable.", HttpStatus.NOT_FOUND.value());
+        }
+    }
+
+    /**
+     * Returns all realm users except the given user id, for the share-picker directory.
+     */
+    public List<UserSummaryDto> listUsersExcluding(String excludeUserId) {
+        return listUsers().stream()
+            .filter(user -> !user.id().equals(excludeUserId))
+            .map(user -> new UserSummaryDto(user.id(), user.username()))
+            .toList();
+    }
+
+    /** Lists all non-service-account realm users sorted by username. */
     public List<AppUserDto> listUsers() {
         String token = serviceAccountToken();
-        JsonNode users = webClient.get()
-            .uri("/admin/realms/{realm}/users", properties.getRealm())
-            .headers(headers -> headers.setBearerAuth(token))
-            .retrieve()
-            .bodyToMono(JsonNode.class)
-            .block();
+        JsonNode users;
+        try {
+            users = webClient.get()
+                .uri("/admin/realms/{realm}/users", properties.getRealm())
+                .headers(headers -> headers.setBearerAuth(token))
+                .retrieve()
+                .bodyToMono(JsonNode.class)
+                .block();
+        } catch (WebClientResponseException ex) {
+            throw keycloakUnavailable(ex);
+        }
 
         if (users == null || !users.isArray()) {
             return List.of();
@@ -65,6 +136,7 @@ public class KeycloakAdminService {
         return result;
     }
 
+    /** Creates a realm user with a temporary password and assigns the requested role. */
     public CreateUserResponse createUser(CreateUserRequest request) {
         String token = serviceAccountToken();
         ensureUniqueUser(request, token);
@@ -74,6 +146,7 @@ public class KeycloakAdminService {
             .put("email", request.email())
             .put("enabled", true)
             .put("emailVerified", true);
+        createPayload.putArray("requiredActions").add("UPDATE_PASSWORD");
 
         JsonNode created = webClient.post()
             .uri("/admin/realms/{realm}/users", properties.getRealm())
@@ -106,11 +179,12 @@ public class KeycloakAdminService {
         );
     }
 
+    /** Deletes a realm user unless the target is the currently authenticated admin. */
     public void deleteUser(String userId, String currentUserId) {
         if (userId.equals(currentUserId)) {
             throw new ApiException(
-                "SELF_DELETE",
-                "Vous ne pouvez pas supprimer votre propre compte administrateur actif.",
+                "CANNOT_DELETE_SELF",
+                "Vous ne pouvez pas supprimer votre propre compte.",
                 HttpStatus.BAD_REQUEST.value()
             );
         }
@@ -252,7 +326,7 @@ public class KeycloakAdminService {
             }
         }
         if (roles.isEmpty()) {
-            roles.add("USER");
+            roles.add(AppRoles.USER);
         }
         return roles;
     }

@@ -24,6 +24,9 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+/**
+ * Configures WebFlux security, OAuth2 login, CORS, and session logout for the BFF.
+ */
 @Configuration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
@@ -31,6 +34,7 @@ public class SecurityConfig {
 
     private final CorsProperties corsProperties;
 
+    /** Creates the security configuration using CORS properties. */
     public SecurityConfig(CorsProperties corsProperties) {
         this.corsProperties = corsProperties;
     }
@@ -46,6 +50,7 @@ public class SecurityConfig {
         logoutSuccessHandler.setPostLogoutRedirectUri(frontendOrigin + "/login");
 
         http
+            // CSRF disabled — mitigated by SameSite=Lax cookie + strict CORS origin; re-enable for non-SPA use
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .exceptionHandling(exceptions -> exceptions

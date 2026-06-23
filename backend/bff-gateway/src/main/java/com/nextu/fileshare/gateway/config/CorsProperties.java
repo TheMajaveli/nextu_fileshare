@@ -3,6 +3,9 @@ package com.nextu.fileshare.gateway.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Binds CORS settings from {@code app.cors.*} configuration properties.
+ */
 @Configuration
 @ConfigurationProperties(prefix = "app.cors")
 public class CorsProperties {

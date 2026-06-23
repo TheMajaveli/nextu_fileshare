@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
 
+/**
+ * Maps application and framework exceptions to consistent JSON error responses.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -31,6 +34,16 @@ public class GlobalExceptionHandler {
     ResponseEntity<ErrorResponse> handleValidation(WebExchangeBindException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(new ErrorResponse("VALIDATION_ERROR", "Requête invalide."));
+    }
+
+    @ExceptionHandler(KeycloakServiceException.class)
+    ResponseEntity<ErrorResponse> handleKeycloakUnavailable(KeycloakServiceException ex) {
+        log.warn("Keycloak unavailable: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+            .body(new ErrorResponse(
+                "KEYCLOAK_UNAVAILABLE",
+                "Le service d'authentification est temporairement indisponible."
+            ));
     }
 
     @ExceptionHandler(Exception.class)

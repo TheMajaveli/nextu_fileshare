@@ -7,6 +7,9 @@ import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.userinfo.ReactiveOAuth2UserService;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
+/**
+ * Registers OAuth2/OIDC client beans for Keycloak user info loading.
+ */
 @Configuration
 public class OAuth2ClientConfig {
 

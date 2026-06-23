@@ -21,6 +21,9 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+/**
+ * Admin-only REST controller for listing, creating, and deleting realm users.
+ */
 @RestController
 @RequestMapping("/api/admin/users")
 @PreAuthorize("hasRole('ADMIN')")
@@ -32,18 +35,21 @@ public class AdminUserController {
         this.keycloakAdminService = keycloakAdminService;
     }
 
+    /** Lists all realm users for the admin console. */
     @GetMapping
     public Mono<List<AppUserDto>> listAllUsersAdmin() {
         return Mono.fromCallable(keycloakAdminService::listUsers)
             .subscribeOn(Schedulers.boundedElastic());
     }
 
+    /** Creates a new realm user with a temporary password and assigned role. */
     @PostMapping
     public Mono<CreateUserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
         return Mono.fromCallable(() -> keycloakAdminService.createUser(request))
             .subscribeOn(Schedulers.boundedElastic());
     }
 
+    /** Deletes a realm user; the caller cannot delete their own account. */
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> deleteUser(@PathVariable String id, Authentication authentication) {

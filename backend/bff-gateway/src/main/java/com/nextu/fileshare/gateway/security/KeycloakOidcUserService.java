@@ -1,5 +1,6 @@
 package com.nextu.fileshare.gateway.security;
 
+import com.nextu.fileshare.gateway.common.AppRoles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -12,13 +13,16 @@ import org.springframework.security.oauth2.client.oidc.userinfo.OidcReactiveOAut
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import reactor.core.publisher.Mono;
 
+/**
+ * Loads OIDC users from Keycloak and maps realm roles to Spring Security authorities.
+ */
 public class KeycloakOidcUserService extends OidcReactiveOAuth2UserService {
 
-    private static final List<String> APP_ROLES = List.of("USER", "ADMIN");
+    private static final List<String> APP_ROLES = List.of(AppRoles.USER, AppRoles.ADMIN);
 
+    /** Loads the user and enriches authorities with Keycloak realm roles. */
     @Override
     public Mono<OidcUser> loadUser(OidcUserRequest userRequest) {
         return super.loadUser(userRequest).map(this::withRealmRoles);
@@ -45,7 +49,7 @@ public class KeycloakOidcUserService extends OidcReactiveOAuth2UserService {
             }
         }
         if (roles.isEmpty()) {
-            roles.add("USER");
+            roles.add(AppRoles.USER);
         }
         return roles;
     }
