@@ -1,11 +1,11 @@
-import { AppUser, Role } from '../types';
+import { AppUser } from '../types';
 import { notifyUnauthorized } from './sessionManager';
 
 /**
- * Authentication via BFF session cookie (OAuth2 / Keycloak).
+ * Authentication via BFF session cookie.
  */
 
-export async function login(_username: string, _role: Role): Promise<AppUser> {
+export async function login(): Promise<AppUser> {
   window.location.href = '/oauth2/authorization/keycloak';
   return new Promise(() => {});
 }

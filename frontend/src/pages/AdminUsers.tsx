@@ -20,10 +20,10 @@ import {
   ChevronDown,
   LogOut,
   Layers,
-  HardDrive
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Role } from '../types';
+import { getRoleLabel } from '../utils/roles';
 import { EmptyState } from '../components/EmptyState';
 
 export const AdminUsers: React.FC = () => {
@@ -158,7 +158,7 @@ export const AdminUsers: React.FC = () => {
                     <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider leading-none">Admin actif</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-sm font-semibold text-slate-850">{currentUser?.username}</span>
-                      <span className="bg-rose-50 border border-rose-200 text-[9px] text-rose-750 font-bold px-1.5 py-0.25 rounded">ADMIN</span>
+                      <span className="bg-rose-50 border border-rose-200 text-[9px] text-rose-750 font-bold px-1.5 py-0.25 rounded">{getRoleLabel('ADMIN')}</span>
                       <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
                     </div>
                   </div>
@@ -223,7 +223,7 @@ export const AdminUsers: React.FC = () => {
               Gestion de l'Annuaire
             </h2>
             <p className="mt-1.5 text-xs text-slate-500 leading-relaxed max-w-2xl">
-              Ajoutez, gérez et révoquez les comptes collaborateurs autorisés à accéder au système Keycloak.
+              autorisés à utiliser NEXTU-FileShare.
             </p>
           </div>
           <div className="flex">
@@ -323,12 +323,12 @@ export const AdminUsers: React.FC = () => {
                           {u.roles.includes('ADMIN') ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold bg-rose-50 text-rose-700 border border-rose-150 rounded-lg">
                               <ShieldCheck className="w-3.5 h-3.5 text-rose-600" />
-                              ADMIN
+                              {getRoleLabel('ADMIN')}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-150 rounded-lg">
                               <UserCheck className="w-3.5 h-3.5 text-blue-600" />
-                              USER
+                              {getRoleLabel('USER')}
                             </span>
                           )}
                         </td>
@@ -401,11 +401,11 @@ export const AdminUsers: React.FC = () => {
                         <div>
                           {u.roles.includes('ADMIN') ? (
                             <span className="text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-150 px-1.5 py-0.5 rounded-md">
-                              ADMIN
+                              {getRoleLabel('ADMIN')}
                             </span>
                           ) : (
                             <span className="text-[10px] font-bold bg-blue-50 text-blue-750 border border-blue-150 px-1.5 py-0.5 rounded-md">
-                              USER
+                              {getRoleLabel('USER')}
                             </span>
                           )}
                         </div>
@@ -523,7 +523,7 @@ export const AdminUsers: React.FC = () => {
 
                     <div className="space-y-1.5">
                       <span className="block text-xs font-bold uppercase tracking-wider text-slate-500 font-sans">
-                        Niveau d'habilitation (Rôle)
+                        Niveau d'accès
                       </span>
                       <div className="grid grid-cols-2 gap-3 pt-1">
                         <button
@@ -535,7 +535,7 @@ export const AdminUsers: React.FC = () => {
                               : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100/80 hover:border-slate-250'
                           }`}
                         >
-                          <span className="text-xs block">USER</span>
+                          <span className="text-xs block">{getRoleLabel('USER')}</span>
                           <span className="text-[9px] font-normal text-slate-400 block mt-0.5">Accès collaborateur</span>
                         </button>
                         <button
@@ -547,7 +547,7 @@ export const AdminUsers: React.FC = () => {
                               : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100/80 hover:border-slate-250'
                           }`}
                         >
-                          <span className="text-xs block">ADMIN</span>
+                          <span className="text-xs block">{getRoleLabel('ADMIN')}</span>
                           <span className="text-[9px] font-normal text-slate-400 block mt-0.5">Accès administrateur</span>
                         </button>
                       </div>

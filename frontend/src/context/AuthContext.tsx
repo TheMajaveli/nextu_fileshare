@@ -1,11 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { AppUser, Role } from '../types';
+import { AppUser } from '../types';
 import * as authService from '../services/auth';
 
 interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
-  login: (username: string, role: Role) => Promise<AppUser>;
+  login: () => Promise<AppUser>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   clearSession: () => void;
@@ -25,8 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const active = await authService.getCurrentUser();
       setUser(active);
-    } catch (error) {
-      console.error('Erreur lors de la récupération de la session utilisateur', error);
+    } catch {
       setUser(null);
     } finally {
       setLoading(false);
@@ -37,7 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initUser();
   }, []);
 
-  const login = async (_username: string, _role: Role): Promise<AppUser> => {
+  const login = async (): Promise<AppUser> => {
     window.location.href = '/oauth2/authorization/keycloak';
     return new Promise(() => {});
   };
@@ -50,8 +49,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const active = await authService.getCurrentUser();
       setUser(active);
-    } catch (error) {
-      console.error('Erreur lors du rafraîchissement utilisateur', error);
+    } catch {
+      // Silent failure — session state unchanged
     }
   };
 

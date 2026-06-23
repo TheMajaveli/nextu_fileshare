@@ -1,9 +1,11 @@
 import React from 'react';
-import { Shield, KeyRound, AlertCircle } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { motion } from 'motion/react';
 
+const registrationUrl = import.meta.env.VITE_KEYCLOAK_REGISTRATION_URL;
+
 export const Login: React.FC = () => {
-  const handleKeycloakLogin = () => {
+  const handleLogin = () => {
     window.location.href = '/oauth2/authorization/keycloak';
   };
 
@@ -36,37 +38,26 @@ export const Login: React.FC = () => {
           transition={{ duration: 0.4, delay: 0.1 }}
           className="bg-white py-8 px-6 shadow-xl rounded-3xl border border-slate-200/80"
         >
-          <div className="mb-6 rounded-2xl bg-indigo-50/50 border border-indigo-100 p-4 shadow-sm">
-            <div className="flex gap-3">
-              <KeyRound className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-800">Connexion Keycloak</h4>
-                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                  Vous serez redirigé vers Keycloak pour vous authentifier, puis renvoyé vers le tableau de bord.
-                </p>
-              </div>
-            </div>
-          </div>
-
           <button
             type="button"
-            onClick={handleKeycloakLogin}
+            onClick={handleLogin}
             className="w-full flex justify-center items-center gap-3 py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-550 active:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all cursor-pointer"
           >
             <Shield className="h-5 w-5 text-indigo-200" />
-            <span>Se connecter avec Keycloak</span>
+            <span>Se connecter</span>
           </button>
 
-          <div className="mt-8 pt-6 border-t border-slate-100">
-            <div className="flex gap-2 rounded-xl bg-slate-50 border border-slate-200 p-4">
-              <AlertCircle className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
-              <div className="text-[11px] text-slate-600 leading-relaxed space-y-1">
-                <p className="font-bold text-slate-700">Comptes de démo (realm nextu-files)</p>
-                <p><strong>alice</strong> / <strong>bob</strong> — mot de passe : <code className="text-pink-600">password</code></p>
-                <p><strong>admin.smith</strong> — admin, mot de passe : <code className="text-pink-600">password</code></p>
-              </div>
-            </div>
-          </div>
+          {registrationUrl && (
+            <p style={{ textAlign: 'center', marginTop: '12px', fontSize: '13px' }}>
+              Pas encore de compte ?{' '}
+              <a
+                href={registrationUrl}
+                style={{ color: 'inherit', textDecoration: 'underline' }}
+              >
+                S'inscrire
+              </a>
+            </p>
+          )}
         </motion.div>
       </div>
     </div>

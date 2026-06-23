@@ -19,7 +19,7 @@ export const NotFound: React.FC = () => {
         <div className="space-y-2">
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight font-display">Page non trouvée (404)</h1>
           <p className="text-xs text-slate-500 leading-relaxed">
-            La ressource ou l'adresse demandée est introuvable ou vous n'avez pas les habilitations d'accès Keycloak requises.
+            Cette page n'existe pas ou vous n'avez pas les droits nécessaires pour y accéder.
           </p>
         </div>
 

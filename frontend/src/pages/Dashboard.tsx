@@ -10,13 +10,15 @@ import {
   deleteFile, 
   shareFile, 
   revokeShare, 
-  listUsers 
+  listUsers,
+  ApiError,
 } from '../services/api';
 import { 
   FileExtension, 
   FileItem, 
-  AppUser 
+  UserSummary,
 } from '../types';
+import { getRoleLabel } from '../utils/roles';
 import { 
   ShieldCheck, 
   UserCheck, 
@@ -25,7 +27,6 @@ import {
   Download, 
   Trash2, 
   UploadCloud, 
-  Eye, 
   Users, 
   Search, 
   X, 
@@ -85,8 +86,9 @@ export const Dashboard: React.FC = () => {
       showToast(`Fichier "${newFile.filename}" téléversé avec succès !`, 'success');
       setIsUploadOpen(false);
     },
-    onError: (err: any) => {
-      showToast(err.message || 'Erreur lors de l\'envoi du fichier.', 'error');
+    onError: (err: unknown) => {
+      const message = err instanceof ApiError ? err.message : 'Erreur lors de l\'envoi du fichier.';
+      showToast(message, 'error');
     }
   });
 
@@ -97,8 +99,9 @@ export const Dashboard: React.FC = () => {
       showToast('Le fichier a été définitivement supprimé.', 'success');
       setDeleteFileItem(null);
     },
-    onError: (err: any) => {
-      showToast(err.message || 'Échec de la suppression.', 'error');
+    onError: (err: unknown) => {
+      const message = err instanceof ApiError ? err.message : 'Échec de la suppression.';
+      showToast(message, 'error');
     }
   });
 
@@ -110,8 +113,9 @@ export const Dashboard: React.FC = () => {
       setShareFileItem(updatedFile);
       showToast('Accès de partage accordé avec succès !', 'success');
     },
-    onError: (err: any) => {
-      showToast(err.message || 'Erreur lors du partage.', 'error');
+    onError: (err: unknown) => {
+      const message = err instanceof ApiError ? err.message : 'Erreur lors du partage.';
+      showToast(message, 'error');
     }
   });
 
@@ -122,8 +126,9 @@ export const Dashboard: React.FC = () => {
       setShareFileItem(updatedFile);
       showToast('Accès révoqué avec succès.', 'success');
     },
-    onError: (err: any) => {
-      showToast(err.message || 'Erreur lors de la révocation.', 'error');
+    onError: (err: unknown) => {
+      const message = err instanceof ApiError ? err.message : 'Erreur lors de la révocation.';
+      showToast(message, 'error');
     }
   });
 
@@ -167,12 +172,13 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Télécharger le fichier (simulé)
-  const handleSimulatedDownload = (filename: string) => {
-    showToast(`Préparation du fichier pour le téléchargement...`, 'info');
-    setTimeout(() => {
-      showToast(`Téléchargement lancé avec succès pour : "${filename}" !`, 'success');
-    }, 1000);
+  const handleDownload = (fileId: string, filename: string) => {
+    const link = document.createElement('a');
+    link.href = `/api/files/${fileId}/download`;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const isAdmin = user?.roles.includes('ADMIN');
@@ -190,7 +196,7 @@ export const Dashboard: React.FC = () => {
               </div>
               <div>
                 <span className="font-bold text-base text-slate-900 tracking-tight block leading-tight font-display">NEXTU-FileShare</span>
-                <span className="text-[10px] text-slate-500 block tracking-wider uppercase font-semibold">Lille N4 Gateway Interface</span>
+                <span className="text-[10px] text-slate-500 block tracking-wider uppercase font-semibold">Espace documentaire sécurisé</span>
               </div>
             </div>
 
@@ -209,9 +215,9 @@ export const Dashboard: React.FC = () => {
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-sm font-semibold text-slate-850">{user?.username}</span>
                       {isAdmin ? (
-                        <span className="bg-rose-50 border border-rose-200 text-[9px] text-rose-750 font-bold px-1.5 py-0.25 rounded">ADMIN</span>
+                        <span className="bg-rose-50 border border-rose-200 text-[9px] text-rose-750 font-bold px-1.5 py-0.25 rounded">{getRoleLabel('ADMIN')}</span>
                       ) : (
-                        <span className="bg-blue-50 border border-blue-200 text-[9px] text-blue-750 font-bold px-1.5 py-0.25 rounded">USER</span>
+                        <span className="bg-blue-50 border border-blue-200 text-[9px] text-blue-750 font-bold px-1.5 py-0.25 rounded">{getRoleLabel('USER')}</span>
                       )}
                       <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
                     </div>
@@ -471,7 +477,7 @@ export const Dashboard: React.FC = () => {
                           <td className="px-6 py-4.5 whitespace-nowrap text-right">
                             <div className="flex items-center justify-end gap-2.5">
                               <button
-                                onClick={() => handleSimulatedDownload(file.filename)}
+                                onClick={() => handleDownload(file.id, file.filename)}
                                 className="text-slate-400 hover:text-slate-700 p-1.5 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                                 title="Télécharger le fichier"
                               >
@@ -530,7 +536,7 @@ export const Dashboard: React.FC = () => {
 
                           <div className="flex items-center gap-1.5">
                             <button
-                              onClick={() => handleSimulatedDownload(file.filename)}
+                              onClick={() => handleDownload(file.id, file.filename)}
                               className="text-slate-600 hover:text-slate-800 px-2.5 py-1 flex items-center gap-1 rounded-xl bg-slate-50 border border-slate-205 text-xs font-semibold"
                             >
                               <Download className="w-3.5 h-3.5 text-slate-550" />
@@ -644,7 +650,7 @@ export const Dashboard: React.FC = () => {
                           </td>
                           <td className="px-6 py-4.5 whitespace-nowrap text-right">
                             <button
-                              onClick={() => handleSimulatedDownload(file.filename)}
+                              onClick={() => handleDownload(file.id, file.filename)}
                               className="text-slate-400 hover:text-slate-700 p-1.5 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                               title="Télécharger le fichier partagé"
                             >
@@ -685,7 +691,7 @@ export const Dashboard: React.FC = () => {
                           </span>
 
                           <button
-                            onClick={() => handleSimulatedDownload(file.filename)}
+                            onClick={() => handleDownload(file.id, file.filename)}
                             className="text-indigo-600 hover:text-indigo-755 font-bold flex items-center gap-1 hover:underline text-xs"
                           >
                             <Download className="w-4 h-4" />
@@ -744,7 +750,7 @@ export const Dashboard: React.FC = () => {
       <footer className="bg-white border-t border-slate-200 mt-20 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-400">
           <p>© 2026 NEXTU-LILLE N4 • Plateforme de Gestion de Fichiers Securisée</p>
-          <p className="mt-1">Compatible Spring Cloud Gateway &amp; Keycloak OpenID Connect</p>
+          <p className="mt-1">NEXTU-FileShare — Tous droits réservés</p>
         </div>
       </footer>
     </div>
@@ -765,7 +771,6 @@ const UploadModal: React.FC<UploadProps> = ({ onClose, onUpload, isPending }) =>
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
   const [fileSelected, setFileSelected] = useState<File | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
 
   // Suffixes et tailles autorisés
@@ -818,22 +823,10 @@ const UploadModal: React.FC<UploadProps> = ({ onClose, onUpload, isPending }) =>
 
   const handleSubmit = async () => {
     if (!fileSelected) return;
-
-    // Progression simulée
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setUploadProgress(progress);
-      if (progress >= 100) {
-        clearInterval(interval);
-      }
-    }, 120);
-
     try {
       await onUpload(fileSelected);
-    } catch (err) {
-      clearInterval(interval);
-      setUploadProgress(0);
+    } catch {
+      // Error toast handled by parent mutation — keep modal open for retry
     }
   };
 
@@ -844,7 +837,7 @@ const UploadModal: React.FC<UploadProps> = ({ onClose, onUpload, isPending }) =>
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={onClose}
+          onClick={isPending ? undefined : onClose}
           className="fixed inset-0 bg-black/70 backdrop-blur-md"
         ></motion.div>
 
@@ -862,7 +855,8 @@ const UploadModal: React.FC<UploadProps> = ({ onClose, onUpload, isPending }) =>
             </div>
             <button
               onClick={onClose}
-              className="text-slate-450 hover:text-white p-1 rounded-lg hover:bg-slate-900 cursor-pointer transition-colors"
+              disabled={isPending}
+              className="text-slate-450 hover:text-white p-1 rounded-lg hover:bg-slate-900 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <X className="w-5 h-5" />
             </button>
@@ -936,18 +930,13 @@ const UploadModal: React.FC<UploadProps> = ({ onClose, onUpload, isPending }) =>
                   )}
                 </div>
 
-                {/* Progress bar simulation */}
                 {isPending && (
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs font-semibold text-slate-400">
-                      <span>Progression du téléversement...</span>
-                      <span className="font-mono">{Math.min(uploadProgress, 100)}%</span>
+                      <span>Téléversement en cours...</span>
                     </div>
                     <div className="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800">
-                      <div 
-                        className="bg-indigo-500 h-full rounded-full transition-all duration-150"
-                        style={{ width: `${Math.min(uploadProgress, 100)}%` }}
-                      ></div>
+                      <div className="bg-indigo-500 h-full w-full rounded-full animate-pulse" />
                     </div>
                   </div>
                 )}
@@ -991,7 +980,7 @@ const UploadModal: React.FC<UploadProps> = ({ onClose, onUpload, isPending }) =>
 // 2. SHARE MODAL
 interface ShareProps {
   file: FileItem;
-  directoryUsers: AppUser[];
+  directoryUsers: UserSummary[];
   onClose: () => void;
   onShare: (targetUserId: string) => Promise<any>;
   onRevoke: (targetUserId: string) => Promise<any>;
@@ -1016,8 +1005,7 @@ const ShareModal: React.FC<ShareProps> = ({
   const eligibleUsers = directoryUsers.filter((u) => {
     const isOwner = u.id === file.ownerId;
     const isAlreadyShared = file.sharedWith.some((shared) => shared.userId === u.id);
-    const matchesSearch = u.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          u.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = u.username.toLowerCase().includes(searchTerm.toLowerCase());
     return !isOwner && !isAlreadyShared && matchesSearch;
   });
 
@@ -1092,7 +1080,6 @@ const ShareModal: React.FC<ShareProps> = ({
                       >
                         <div>
                           <span className="font-semibold text-slate-205 block">{u.username}</span>
-                          <span className="text-slate-500 text-[10px] block font-medium">{u.email}</span>
                         </div>
                         <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wide bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-md">
                           Inviter

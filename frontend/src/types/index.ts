@@ -40,3 +40,8 @@ export interface CreateUserResponse {
   createdAt: string;
   temporaryPassword: string;
 }
+
+export interface UserSummary {
+  id: string;
+  username: string;
+}

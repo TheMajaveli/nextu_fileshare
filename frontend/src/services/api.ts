@@ -1,4 +1,4 @@
-import { AppUser, CreateUserResponse, FileItem, Role } from '../types';
+import { AppUser, CreateUserResponse, FileItem, Role, UserSummary } from '../types';
 import { notifyUnauthorized } from './sessionManager';
 
 /**
@@ -87,8 +87,8 @@ export async function revokeShare(fileId: string, userId: string): Promise<FileI
   });
 }
 
-export async function listUsers(): Promise<AppUser[]> {
-  return apiFetch<AppUser[]>('/api/users');
+export async function listUsers(): Promise<UserSummary[]> {
+  return apiFetch<UserSummary[]>('/api/users');
 }
 
 export async function listAllUsersAdmin(): Promise<AppUser[]> {
