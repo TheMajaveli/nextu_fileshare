@@ -162,13 +162,21 @@ The response includes a one-time `temporaryPassword` field for the admin to shar
 
 ## Configuration
 
-Copy `frontend/.env.example` to `frontend/.env` and adjust `VITE_KEYCLOAK_REGISTRATION_URL` if needed. Copy `.env.example` to `frontend/.env.local` and adjust ports if needed. The Vite dev server proxies `/api`, `/oauth2`, `/login`, and `/logout` to the BFF gateway on port 8090.
+Copy `frontend/.env.example` to `frontend/.env` and adjust `VITE_KEYCLOAK_REGISTRATION_URL` if needed. Copy `.env.example` to `frontend/.env.local` and adjust ports if needed. The Vite dev server proxies `/api`, `/oauth2`, `/login/oauth2`, and `/logout` to the BFF gateway on port 8090.
 
 After Keycloak starts, sync OAuth redirect URIs for local dev:
 
 ```bash
 ./backend/scripts/sync-keycloak-client.sh
 ```
+
+Verify the full file API (list, upload, share, revoke, download, access control, admin) with:
+
+```bash
+./backend/scripts/verify-api.sh
+```
+
+Requires the Docker stack running; the frontend dev server is not required (OAuth callback is completed on the BFF at port 8090).
 
 ## Development
 
@@ -192,8 +200,8 @@ The React UI is already built. To connect it to this backend, only two configura
 
 | Setting | Dev value | Notes |
 |---------|-----------|-------|
-| **Vite dev proxy target** | `http://localhost:8090` | In `frontend/vite.config.ts` — proxies `/api`, `/oauth2`, `/login`, `/logout` |
-| **Keycloak registration URL** | `http://localhost:8180/realms/nextu-files/protocol/openid-connect/registrations` | Set via `VITE_KEYCLOAK_REGISTRATION_URL` in `frontend/.env` — used by the login page “S'inscrire” link |
+| **Vite dev proxy target** | `http://localhost:8090` | In `frontend/vite.config.ts` — proxies `/api`, `/oauth2`, `/login/oauth2`, `/logout` |
+| **Keycloak registration URL** | `http://localhost:8180/realms/nextu-files/protocol/openid-connect/registrations` | Set via `VITE_KEYCLOAK_REGISTRATION_URL` in `frontend/.env` — `Login.tsx` appends `client_id`, `redirect_uri`, and other OIDC params |
 
 No component code or JSON field names need to change. `fetch(..., { credentials: 'include' })` is already set in `auth.ts` and `api.ts`.
 

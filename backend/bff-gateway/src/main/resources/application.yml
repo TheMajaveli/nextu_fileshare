@@ -16,25 +16,10 @@ spring:
     max-in-memory-size: 30MB
   cloud:
     gateway:
+      handler-mapping:
+        order: 5
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials RETAIN_FIRST
-      routes:
-        - id: storage-shared-with-me
-          uri: ${STORAGE_SERVICE_URL:http://localhost:8081}
-          predicates:
-            - Path=/api/files/shared-with-me
-          filters:
-            - TokenRelay=
-            - RewritePath=/api/files/shared-with-me, /files/shared
-          order: 0
-        - id: storage-files
-          uri: ${STORAGE_SERVICE_URL:http://localhost:8081}
-          predicates:
-            - Path=/api/files/**
-          filters:
-            - TokenRelay=
-            - RewritePath=/api/files(?<segment>/?.*), /files${segment}
-          order: 1
   security:
     oauth2:
       client:
@@ -63,6 +48,9 @@ keycloak:
     realm: ${KEYCLOAK_REALM:nextu-files}
     client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:admin-cli-service}
     client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:admin-cli-service-secret}
+  oidc:
+    end-session-uri: ${KEYCLOAK_END_SESSION_URI:http://localhost:8180/realms/nextu-files/protocol/openid-connect/logout}
+    client-id: ${KEYCLOAK_CLIENT_ID:gateway-client}
 
 app:
   cors:

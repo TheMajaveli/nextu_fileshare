@@ -2,7 +2,24 @@ import React from 'react';
 import { Shield } from 'lucide-react';
 import { motion } from 'motion/react';
 
-const registrationUrl = import.meta.env.VITE_KEYCLOAK_REGISTRATION_URL;
+const registrationBaseUrl = import.meta.env.VITE_KEYCLOAK_REGISTRATION_URL as string | undefined;
+
+/** Keycloak registrations endpoint requires OIDC params (client_id, redirect_uri, …). */
+function buildRegistrationUrl(): string | null {
+  if (!registrationBaseUrl) return null;
+
+  const endpoint = registrationBaseUrl.split('?')[0];
+  const params = new URLSearchParams({
+    client_id: 'gateway-client',
+    response_type: 'code',
+    scope: 'openid',
+    redirect_uri: `${window.location.origin}/login/oauth2/code/keycloak`,
+  });
+
+  return `${endpoint}?${params.toString()}`;
+}
+
+const registrationUrl = buildRegistrationUrl();
 
 export const Login: React.FC = () => {
   const handleLogin = () => {

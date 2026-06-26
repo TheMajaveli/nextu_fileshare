@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
@@ -21,13 +22,15 @@ export default defineConfig(() => {
           target: BFF_TARGET,
           changeOrigin: false,
           secure: false,
+          timeout: 120_000,
+          proxyTimeout: 120_000,
         },
         '/oauth2': {
           target: BFF_TARGET,
           changeOrigin: false,
           secure: false,
         },
-        '/login': {
+        '/login/oauth2': {
           target: BFF_TARGET,
           changeOrigin: false,
           secure: false,
@@ -40,6 +43,12 @@ export default defineConfig(() => {
       },
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
+    },
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./src/test/setup.ts'],
+      css: false,
     },
   };
 });

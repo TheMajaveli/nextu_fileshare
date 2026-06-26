@@ -1,6 +1,7 @@
 package com.nextu.fileshare.gateway.config;
 
 import com.nextu.fileshare.gateway.security.KeycloakOidcUserService;
+import com.nextu.fileshare.gateway.service.KeycloakAdminService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
@@ -14,7 +15,7 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 public class OAuth2ClientConfig {
 
     @Bean
-    ReactiveOAuth2UserService<OidcUserRequest, OidcUser> oidcUserService() {
-        return new KeycloakOidcUserService();
+    ReactiveOAuth2UserService<OidcUserRequest, OidcUser> oidcUserService(KeycloakAdminService keycloakAdminService) {
+        return new KeycloakOidcUserService(keycloakAdminService);
     }
 }

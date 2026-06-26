@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -57,7 +58,13 @@ public class SecurityConfig {
     @Bean
     JwtDecoder jwtDecoder(OAuth2ResourceServerProperties properties) {
         String issuerUri = properties.getJwt().getIssuerUri();
-        NimbusJwtDecoder decoder = JwtDecoders.fromIssuerLocation(issuerUri);
+        String jwkSetUri = properties.getJwt().getJwkSetUri();
+
+        // Prefer explicit JWK URI so Docker can reach Keycloak on the internal network
+        // while tokens still carry the public issuer (e.g. http://localhost:8180/...).
+        NimbusJwtDecoder decoder = StringUtils.hasText(jwkSetUri)
+            ? NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build()
+            : JwtDecoders.fromIssuerLocation(issuerUri);
 
         OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<Object>(
             "aud",
@@ -72,7 +79,7 @@ public class SecurityConfig {
             }
         );
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(
-            JwtValidators.createDefault(),
+            JwtValidators.createDefaultWithIssuer(issuerUri),
             audienceValidator
         );
         decoder.setJwtValidator(validator);

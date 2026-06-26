@@ -59,6 +59,7 @@ services:
       - "8180:8080"
     volumes:
       - ./keycloak/realm-nextu-files.json:/opt/keycloak/data/import/realm-nextu-files.json:ro
+      - ./keycloak/theme/nextu:/opt/keycloak/themes/nextu:ro
     healthcheck:
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e 'GET /realms/nextu-files HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && timeout 3 cat <&3 | grep -q '200'"]
       interval: 10s
@@ -115,6 +116,7 @@ services:
       SERVER_PORT: 8090
       STORAGE_SERVICE_URL: http://storage-service:8081
       KEYCLOAK_AUTHORIZATION_URI: http://localhost:8180/realms/nextu-files/protocol/openid-connect/auth
+      KEYCLOAK_END_SESSION_URI: http://localhost:8180/realms/nextu-files/protocol/openid-connect/logout
       KEYCLOAK_TOKEN_URI: http://host.docker.internal:8180/realms/nextu-files/protocol/openid-connect/token
       KEYCLOAK_JWK_SET_URI: http://host.docker.internal:8180/realms/nextu-files/protocol/openid-connect/certs
       KEYCLOAK_USERINFO_URI: http://host.docker.internal:8180/realms/nextu-files/protocol/openid-connect/userinfo

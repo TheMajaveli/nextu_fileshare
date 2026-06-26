@@ -1,3 +1,137 @@
 # Full stack — run from repo root: docker compose up --build
-include:
-  - path: backend/docker-compose.yml
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nextu-postgres
+    restart: unless-stopped  # auto-recover after crash or host restart
+    environment:
+      POSTGRES_DB: nextu_files
+      POSTGRES_USER: nextu
+      POSTGRES_PASSWORD: nextu  # dev-only credentials — replace with secrets manager in production
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/docker/postgres/init-databases.sql:/docker-entrypoint-initdb.d/02-init-databases.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nextu -d nextu_files"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  db-init:
+    image: postgres:16-alpine
+    container_name: nextu-db-init
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: nextu
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        psql -h postgres -U nextu -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='nextu_storage'" | grep -q 1 \
+          || psql -h postgres -U nextu -d postgres -c "CREATE DATABASE nextu_storage"
+        psql -h postgres -U nextu -d postgres -c "GRANT ALL PRIVILEGES ON DATABASE nextu_storage TO nextu"
+    restart: "no"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.5
+    container_name: nextu-keycloak
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/nextu_files
+      KC_DB_USERNAME: nextu
+      KC_DB_PASSWORD: nextu
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin  # dev-only credentials — replace with secrets manager in production
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8180
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY: edge
+    command: start-dev --import-realm
+    ports:
+      - "8180:8080"
+    volumes:
+      - ./backend/keycloak/realm-nextu-files.json:/opt/keycloak/data/import/realm-nextu-files.json:ro
+      - ./backend/keycloak/theme/nextu:/opt/keycloak/themes/nextu:ro
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e 'GET /realms/nextu-files HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && timeout 3 cat <&3 | grep -q '200'"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
+
+  storage-service:
+    build:
+      context: ./backend/storage-service
+    container_name: nextu-storage-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
+      keycloak:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nextu_storage
+      SPRING_DATASOURCE_USERNAME: nextu
+      SPRING_DATASOURCE_PASSWORD: nextu
+      STORAGE_BASE_PATH: /data/storage
+      KEYCLOAK_ISSUER_URI: http://localhost:8180/realms/nextu-files
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/nextu-files/protocol/openid-connect/certs
+      KEYCLOAK_ADMIN_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_REALM: nextu-files
+      KEYCLOAK_ADMIN_CLIENT_ID: admin-cli-service
+      KEYCLOAK_ADMIN_CLIENT_SECRET: admin-cli-service-secret  # dev-only secret — replace with vault or Docker secrets in production
+    volumes:
+      - storage_data:/data/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  bff-gateway:
+    build:
+      context: ./backend/bff-gateway
+    container_name: nextu-bff-gateway
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      storage-service:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8090
+      STORAGE_SERVICE_URL: http://storage-service:8081
+      KEYCLOAK_AUTHORIZATION_URI: http://localhost:8180/realms/nextu-files/protocol/openid-connect/auth
+      KEYCLOAK_END_SESSION_URI: http://localhost:8180/realms/nextu-files/protocol/openid-connect/logout
+      KEYCLOAK_TOKEN_URI: http://host.docker.internal:8180/realms/nextu-files/protocol/openid-connect/token
+      KEYCLOAK_JWK_SET_URI: http://host.docker.internal:8180/realms/nextu-files/protocol/openid-connect/certs
+      KEYCLOAK_USERINFO_URI: http://host.docker.internal:8180/realms/nextu-files/protocol/openid-connect/userinfo
+      KEYCLOAK_CLIENT_ID: gateway-client
+      KEYCLOAK_CLIENT_SECRET: gateway-client-secret  # dev-only secret — replace with vault or Docker secrets in production
+      KEYCLOAK_ADMIN_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_REALM: nextu-files
+      KEYCLOAK_ADMIN_CLIENT_ID: admin-cli-service
+      KEYCLOAK_ADMIN_CLIENT_SECRET: admin-cli-service-secret  # dev-only secret — replace with vault or Docker secrets in production
+      CORS_ALLOWED_ORIGINS: http://localhost:5173
+      OAUTH2_REDIRECT_URI: http://localhost:5173/login/oauth2/code/{registrationId}
+    ports:
+      - "8090:8090"
+
+volumes:
+  postgres_data:
+  storage_data:

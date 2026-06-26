@@ -464,7 +464,7 @@ export const AdminUsers: React.FC = () => {
                 className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all w-full max-w-md border border-slate-200/85 z-10"
               >
                 {/* Header */}
-                <div className="bg-slate-50 px-6 py-4.5 border-b border-slate-200/80 flex items-center justify-between">
+                <div className="bg-white px-6 py-4.5 border-b border-slate-200 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <UserPlus className="w-5 h-5 text-indigo-600" />
                     <h3 className="text-base font-bold text-slate-900 font-sans leading-tight">Créer un utilisateur</h3>
@@ -479,7 +479,7 @@ export const AdminUsers: React.FC = () => {
 
                 {/* Form body */}
                 <form onSubmit={handleCreateSubmit}>
-                  <div className="px-6 py-5 space-y-4">
+                  <div className="px-6 py-5 space-y-4 bg-white">
                     {formError && (
                       <div className="p-3 bg-rose-50 border border-rose-150 rounded-xl text-rose-700 text-xs font-semibold flex gap-2 items-center">
                         <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
@@ -488,41 +488,41 @@ export const AdminUsers: React.FC = () => {
                     )}
 
                     <div className="space-y-1.5">
-                      <label htmlFor="username-input" className="block text-xs font-bold uppercase tracking-wider text-slate-500 font-sans">
+                      <label htmlFor="username-input" className="block text-xs font-bold uppercase tracking-wider text-slate-900 font-sans">
                         Nom d'utilisateur
                       </label>
                       <div className="relative">
-                        <User className="absolute left-3 top-3 h-4.5 w-4.5 text-slate-450" />
+                        <User className="absolute left-3 top-3 h-4.5 w-4.5 text-indigo-500" />
                         <input
                           id="username-input"
                           type="text"
                           value={usernameInput}
                           onChange={(e) => setUsernameInput(e.target.value)}
                           placeholder="Ex: chloe.martin"
-                          className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-505 rounded-xl text-sm text-slate-800 outline-none transition-all placeholder-indigo-100"
+                          className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label htmlFor="email-input" className="block text-xs font-bold uppercase tracking-wider text-slate-500 font-sans">
+                      <label htmlFor="email-input" className="block text-xs font-bold uppercase tracking-wider text-slate-900 font-sans">
                         Adresse Email
                       </label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4.5 w-4.5 text-slate-450" />
+                        <Mail className="absolute left-3 top-3 h-4.5 w-4.5 text-indigo-500" />
                         <input
                           id="email-input"
                           type="email"
                           value={emailInput}
                           onChange={(e) => setEmailInput(e.target.value)}
                           placeholder="Ex: chloe.martin@nextu.fr"
-                          className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-505 rounded-xl text-sm text-slate-800 outline-none transition-all placeholder-indigo-100"
+                          className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <span className="block text-xs font-bold uppercase tracking-wider text-slate-500 font-sans">
+                      <span className="block text-xs font-bold uppercase tracking-wider text-slate-900 font-sans">
                         Niveau d'accès
                       </span>
                       <div className="grid grid-cols-2 gap-3 pt-1">
@@ -531,34 +531,34 @@ export const AdminUsers: React.FC = () => {
                           onClick={() => setRoleInput('USER')}
                           className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
                             roleInput === 'USER'
-                              ? 'bg-blue-50 border-blue-200 text-blue-700 font-bold ring-1 ring-blue-500/10'
-                              : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100/80 hover:border-slate-250'
+                              ? 'bg-indigo-50 border-indigo-200 text-indigo-700 font-bold ring-1 ring-indigo-500/10'
+                              : 'bg-white border-slate-200 text-slate-900 hover:bg-indigo-50/50 hover:border-indigo-200'
                           }`}
                         >
                           <span className="text-xs block">{getRoleLabel('USER')}</span>
-                          <span className="text-[9px] font-normal text-slate-400 block mt-0.5">Accès collaborateur</span>
+                          <span className="text-[9px] font-normal text-indigo-600 block mt-0.5">Accès collaborateur</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => setRoleInput('ADMIN')}
                           className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
                             roleInput === 'ADMIN'
-                              ? 'bg-rose-50 border-rose-200 text-rose-750 font-bold ring-1 ring-rose-500/10'
-                              : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100/80 hover:border-slate-250'
+                              ? 'bg-indigo-50 border-indigo-300 text-indigo-800 font-bold ring-1 ring-indigo-500/20'
+                              : 'bg-white border-slate-200 text-slate-900 hover:bg-indigo-50/50 hover:border-indigo-200'
                           }`}
                         >
                           <span className="text-xs block">{getRoleLabel('ADMIN')}</span>
-                          <span className="text-[9px] font-normal text-slate-400 block mt-0.5">Accès administrateur</span>
+                          <span className="text-[9px] font-normal text-indigo-600 block mt-0.5">Accès administrateur</span>
                         </button>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-slate-50 px-6 py-4.5 border-t border-slate-205 flex justify-end gap-3 rounded-b-2xl">
+                  <div className="bg-white px-6 py-4.5 border-t border-slate-200 flex justify-end gap-3 rounded-b-2xl">
                     <button
                       type="button"
                       onClick={() => setIsCreateOpen(false)}
-                      className="px-4 py-2 text-slate-500 hover:bg-slate-150 rounded-xl text-sm font-semibold transition-all cursor-pointer"
+                      className="px-4 py-2 text-slate-900 hover:bg-slate-100 rounded-xl text-sm font-semibold transition-all cursor-pointer"
                     >
                       Annuler
                     </button>
@@ -613,8 +613,8 @@ export const AdminUsers: React.FC = () => {
                     <h3 className="text-base font-bold text-slate-900 font-sans leading-tight">
                       Confirmer la suppression
                     </h3>
-                    <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                      Êtes-vous sûr de vouloir de supprimer le compte de <strong>{userToDelete?.username}</strong> de l'annuaire de fichiers ?
+                    <p className="text-xs text-slate-900 mt-2 leading-relaxed">
+                      Êtes-vous sûr de vouloir de supprimer le compte de <strong className="text-indigo-700">{userToDelete?.username}</strong> de l'annuaire de fichiers ?
                     </p>
                     <p className="text-[11px] text-rose-750 font-bold bg-rose-50 p-2.5 border border-rose-105 rounded-lg mt-3">
                       ⚠️ Cette action est irréversible et d'autres partages associés seront révoqués.
@@ -625,7 +625,7 @@ export const AdminUsers: React.FC = () => {
                 <div className="mt-6 flex justify-end gap-3 pt-3 border-t border-slate-100">
                   <button
                     onClick={() => setUserToDelete(null)}
-                    className="px-3.5 py-1.5 text-xs text-slate-500 hover:bg-slate-100 rounded-lg font-semibold transition-all cursor-pointer"
+                    className="px-3.5 py-1.5 text-xs text-slate-900 hover:bg-slate-100 rounded-lg font-semibold transition-all cursor-pointer"
                   >
                     Conserver
                   </button>

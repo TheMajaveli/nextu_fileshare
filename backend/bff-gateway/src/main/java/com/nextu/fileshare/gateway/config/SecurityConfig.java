@@ -3,8 +3,10 @@ package com.nextu.fileshare.gateway.config;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import com.nextu.fileshare.gateway.security.KeycloakLogoutSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -12,8 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.oauth2.client.oidc.web.server.logout.OidcClientInitiatedServerLogoutSuccessHandler;
-import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler;
@@ -30,6 +30,7 @@ import reactor.core.publisher.Mono;
 @Configuration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
+@EnableConfigurationProperties({CorsProperties.class, KeycloakOidcProperties.class})
 public class SecurityConfig {
 
     private final CorsProperties corsProperties;
@@ -42,19 +43,14 @@ public class SecurityConfig {
     @Bean
     SecurityWebFilterChain springSecurityFilterChain(
         ServerHttpSecurity http,
-        ReactiveClientRegistrationRepository clientRegistrationRepository
+        KeycloakLogoutSuccessHandler logoutSuccessHandler
     ) {
-        OidcClientInitiatedServerLogoutSuccessHandler logoutSuccessHandler =
-            new OidcClientInitiatedServerLogoutSuccessHandler(clientRegistrationRepository);
-        String frontendOrigin = corsProperties.getAllowedOrigins().split(",")[0].trim();
-        logoutSuccessHandler.setPostLogoutRedirectUri(frontendOrigin + "/login");
-
         http
             // CSRF disabled — mitigated by SameSite=Lax cookie + strict CORS origin; re-enable for non-SPA use
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint(authenticationEntryPoint(frontendOrigin))
+                .authenticationEntryPoint(authenticationEntryPoint())
             )
             .authorizeExchange(exchanges -> exchanges
                 .pathMatchers("/oauth2/**", "/login/**", "/actuator/health").permitAll()
@@ -96,7 +92,7 @@ public class SecurityConfig {
         };
     }
 
-    private ServerAuthenticationEntryPoint authenticationEntryPoint(String frontendOrigin) {
+    private ServerAuthenticationEntryPoint authenticationEntryPoint() {
         return (exchange, ex) -> {
             String path = exchange.getRequest().getPath().value();
             if (path.startsWith("/api/")) {

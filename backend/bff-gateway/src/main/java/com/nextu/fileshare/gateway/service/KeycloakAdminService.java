@@ -47,6 +47,11 @@ public class KeycloakAdminService {
         this.webClient = WebClient.builder().baseUrl(properties.getServerUrl()).build();
     }
 
+    /** Returns application realm roles (USER, ADMIN) for the given Keycloak user id. */
+    public List<String> getUserAppRoles(String userId) {
+        return fetchRealmRoles(userId, serviceAccountToken());
+    }
+
     /** Returns the ISO-8601 creation timestamp for the given Keycloak user id. */
     public String getUserCreatedAt(String userId) {
         String token = serviceAccountToken();
@@ -62,7 +67,8 @@ public class KeycloakAdminService {
             }
             long createdTimestamp = user.path("createdTimestamp").asLong(0);
             if (createdTimestamp <= 0) {
-                throw new ApiException("KEYCLOAK_ERROR", "Date de création utilisateur indisponible.", HttpStatus.BAD_GATEWAY.value());
+                // Realm-imported users may omit createdTimestamp until first admin update
+                createdTimestamp = System.currentTimeMillis();
             }
             return Instant.ofEpochMilli(createdTimestamp).toString();
         } catch (WebClientResponseException.NotFound ex) {

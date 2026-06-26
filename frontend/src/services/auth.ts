@@ -5,13 +5,21 @@ import { notifyUnauthorized } from './sessionManager';
  * Authentication via BFF session cookie.
  */
 
+function submitLogoutRequest(): void {
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/logout';
+  document.body.appendChild(form);
+  form.submit();
+}
+
 export async function login(): Promise<AppUser> {
   window.location.href = '/oauth2/authorization/keycloak';
   return new Promise(() => {});
 }
 
 export async function logout(): Promise<void> {
-  window.location.href = '/logout';
+  submitLogoutRequest();
 }
 
 export async function getCurrentUser(): Promise<AppUser | null> {

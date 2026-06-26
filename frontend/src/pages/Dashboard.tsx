@@ -845,27 +845,27 @@ const UploadModal: React.FC<UploadProps> = ({ onClose, onUpload, isPending }) =>
           initial={{ scale: 0.95, opacity: 0, y: 15 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 15 }}
-          className="relative transform overflow-hidden rounded-2xl bg-[#090D14] text-left shadow-2xl transition-all w-full max-w-md border border-slate-900 z-10"
+          className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all w-full max-w-md border border-slate-200 z-10"
         >
           {/* Header */}
-          <div className="bg-[#0C101A] px-6 py-4.5 border-b border-slate-900 flex items-center justify-between">
+          <div className="bg-white px-6 py-4.5 border-b border-slate-200 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <UploadCloud className="w-5 h-5 text-indigo-400" />
-              <h3 className="text-lg font-bold text-white font-sans">Téléverser un document</h3>
+              <UploadCloud className="w-5 h-5 text-indigo-600" />
+              <h3 className="text-lg font-bold text-slate-900 font-sans">Téléverser un document</h3>
             </div>
             <button
               onClick={onClose}
               disabled={isPending}
-              className="text-slate-450 hover:text-white p-1 rounded-lg hover:bg-slate-900 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="p-6 space-y-4">
+          <div className="p-6 space-y-4 bg-white">
             {errorMessage && (
-              <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-350 text-xs font-semibold flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
             )}
@@ -880,8 +880,8 @@ const UploadModal: React.FC<UploadProps> = ({ onClose, onUpload, isPending }) =>
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[180px] ${
                   dragActive
-                    ? 'border-indigo-500 bg-indigo-500/10 scale-[0.98]'
-                    : 'border-slate-800 hover:border-slate-700 bg-slate-900/10'
+                    ? 'border-indigo-500 bg-indigo-50 scale-[0.98]'
+                    : 'border-slate-300 hover:border-indigo-300 bg-slate-50'
                 }`}
               >
                 <input
@@ -891,30 +891,30 @@ const UploadModal: React.FC<UploadProps> = ({ onClose, onUpload, isPending }) =>
                   accept=".pdf,.xlsx,.xls,.doc,.docx,.mp3,.mp4"
                   className="hidden"
                 />
-                <div className="p-3 bg-slate-900 rounded-2xl shadow-sm border border-slate-800 mb-3 text-slate-400">
-                  <UploadCloud className="w-6 h-6 text-indigo-400" />
+                <div className="p-3 bg-white rounded-2xl shadow-sm border border-slate-200 mb-3 text-slate-500">
+                  <UploadCloud className="w-6 h-6 text-indigo-600" />
                 </div>
-                <p className="text-sm font-semibold text-slate-205">
-                  Faites glisser votre fichier ou <span className="text-indigo-400 hover:underline">parcourez</span>
+                <p className="text-sm font-semibold text-slate-900">
+                  Faites glisser votre fichier ou <span className="text-indigo-600 hover:underline">parcourez</span>
                 </p>
-                <p className="text-[11px] text-slate-450 mt-1.5 leading-relaxed">
-                  Extensions autorisées : <strong>PDF, XLSX, XLS, DOC, DOCX, MP3, MP4</strong>
+                <p className="text-[11px] text-slate-900 mt-1.5 leading-relaxed">
+                  Extensions autorisées : <strong className="text-indigo-700">PDF, XLSX, XLS, DOC, DOCX, MP3, MP4</strong>
                 </p>
-                <p className="text-[10px] text-indigo-400 font-medium mt-1">Taille maximale : 25 Mo</p>
+                <p className="text-[10px] text-indigo-600 font-medium mt-1">Taille maximale : 25 Mo</p>
               </div>
             ) : (
               // File selected view
-              <div className="bg-[#0F131E] border border-slate-850 rounded-2xl p-4.5 space-y-4">
-                <div className="flex items-center justify-between gap-3 bg-slate-950 border border-slate-900 p-3 rounded-xl shadow-sm">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4.5 space-y-4">
+                <div className="flex items-center justify-between gap-3 bg-white border border-slate-200 p-3 rounded-xl shadow-sm">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="p-2.5 bg-indigo-500/10 text-indigo-400 rounded-lg shrink-0">
+                    <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
                       <FileText className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                      <span className="text-sm font-bold text-white block truncate leading-tight">
+                      <span className="text-sm font-bold text-slate-900 block truncate leading-tight">
                         {fileSelected.name}
                       </span>
-                      <span className="text-[11px] text-slate-450 font-semibold block mt-0.5 font-mono">
+                      <span className="text-[11px] text-slate-500 font-semibold block mt-0.5 font-mono">
                         {(fileSelected.size / (1024 * 1024)).toFixed(2)} Mo
                       </span>
                     </div>
@@ -923,7 +923,7 @@ const UploadModal: React.FC<UploadProps> = ({ onClose, onUpload, isPending }) =>
                   {!isPending && (
                     <button
                       onClick={() => setFileSelected(null)}
-                      className="text-slate-450 hover:text-white p-1 hover:bg-slate-900 rounded-lg shrink-0 cursor-pointer"
+                      className="text-slate-400 hover:text-slate-700 p-1 hover:bg-slate-100 rounded-lg shrink-0 cursor-pointer"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -932,10 +932,10 @@ const UploadModal: React.FC<UploadProps> = ({ onClose, onUpload, isPending }) =>
 
                 {isPending && (
                   <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-semibold text-slate-400">
+                    <div className="flex justify-between text-xs font-semibold text-slate-500">
                       <span>Téléversement en cours...</span>
                     </div>
-                    <div className="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800">
+                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                       <div className="bg-indigo-500 h-full w-full rounded-full animate-pulse" />
                     </div>
                   </div>
@@ -945,11 +945,11 @@ const UploadModal: React.FC<UploadProps> = ({ onClose, onUpload, isPending }) =>
           </div>
 
           {/* Footer controls */}
-          <div className="bg-[#0C101A] px-6 py-4.5 border-t border-slate-900 flex justify-end gap-3 rounded-b-2xl">
+          <div className="bg-white px-6 py-4.5 border-t border-slate-200 flex justify-end gap-3 rounded-b-2xl">
             <button
               onClick={onClose}
               disabled={isPending}
-              className="px-4 py-2 text-slate-350 hover:bg-slate-900 rounded-xl text-sm font-semibold transition-all cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 text-slate-900 hover:bg-slate-100 rounded-xl text-sm font-semibold transition-all cursor-pointer disabled:opacity-50"
             >
               Annuler
             </button>
@@ -1024,48 +1024,48 @@ const ShareModal: React.FC<ShareProps> = ({
           initial={{ scale: 0.95, opacity: 0, y: 15 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 15 }}
-          className="relative transform overflow-hidden rounded-2xl bg-[#090D14] text-left shadow-2xl transition-all w-full max-w-md border border-slate-900 z-10"
+          className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all w-full max-w-md border border-slate-200 z-10"
         >
           {/* Header */}
-          <div className="bg-[#0C101A] px-6 py-4.5 border-b border-slate-900 flex items-center justify-between">
+          <div className="bg-white px-6 py-4.5 border-b border-slate-200 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Share2 className="w-5 h-5 text-indigo-450" />
+              <Share2 className="w-5 h-5 text-indigo-600" />
               <div>
-                <h3 className="text-base font-bold text-white font-sans leading-tight">Autorisations de partage</h3>
-                <span className="text-[10px] text-slate-450 font-bold block truncate max-w-[280px]">Fichier : {file.filename}</span>
+                <h3 className="text-base font-bold text-slate-900 font-sans leading-tight">Autorisations de partage</h3>
+                <span className="text-[10px] text-indigo-600 font-bold block truncate max-w-[280px]">Fichier : {file.filename}</span>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="text-slate-450 hover:text-white p-1 rounded-lg hover:bg-slate-900 cursor-pointer transition-colors"
+              className="text-slate-400 hover:text-slate-900 p-1 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="p-6 space-y-6 bg-white">
             
             {/* SEARCH DIRECTORY COMPONENT */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 font-sans">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-900 font-sans">
                 Accorder un nouvel accès (Recherche)
               </label>
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4.5 w-4.5 text-slate-500" />
+                <Search className="absolute left-3 top-3 h-4.5 w-4.5 text-indigo-500" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Rechercher par nom ou email d'utilisateur..."
-                  className="w-full pl-10 pr-4 py-2 bg-slate-950 border border-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-white rounded-xl text-sm outline-none transition-all placeholder-flat-dark"
+                  className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-slate-900 rounded-xl text-sm outline-none transition-all placeholder:text-slate-400"
                 />
               </div>
 
               {/* Suggestions dropdown list */}
               {searchTerm && (
-                <div className="border border-slate-900 rounded-xl bg-slate-950 max-h-[140px] overflow-y-auto divide-y divide-slate-900 shadow-xl">
+                <div className="border border-slate-200 rounded-xl bg-white max-h-[140px] overflow-y-auto divide-y divide-slate-100 shadow-lg">
                   {eligibleUsers.length === 0 ? (
-                    <p className="text-xs text-slate-450 p-3 italic text-center">Aucun destinataire éligible trouvé.</p>
+                    <p className="text-xs text-slate-600 p-3 italic text-center">Aucun destinataire éligible trouvé.</p>
                   ) : (
                     eligibleUsers.map((u) => (
                       <button
@@ -1076,12 +1076,12 @@ const ShareModal: React.FC<ShareProps> = ({
                           setSearchTerm('');
                         }}
                         disabled={sharePending}
-                        className="w-full text-left px-4 py-2.5 hover:bg-[#121927] flex justify-between items-center transition-colors text-xs cursor-pointer text-slate-200"
+                        className="w-full text-left px-4 py-2.5 hover:bg-indigo-50 flex justify-between items-center transition-colors text-xs cursor-pointer text-slate-900"
                       >
                         <div>
-                          <span className="font-semibold text-slate-205 block">{u.username}</span>
+                          <span className="font-semibold text-slate-900 block">{u.username}</span>
                         </div>
-                        <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wide bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-md">
+                        <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wide bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">
                           Inviter
                         </span>
                       </button>
@@ -1093,27 +1093,27 @@ const ShareModal: React.FC<ShareProps> = ({
 
             {/* LIST OF ALREADY SHARED USERS */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 font-sans">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-900 font-sans">
                 Liste des habilitations actives ({file.sharedWith.length})
               </label>
               
               {file.sharedWith.length === 0 ? (
-                <div className="bg-slate-900/30 rounded-2xl border border-slate-900 p-4 text-center">
-                  <p className="text-xs text-slate-450 italic">Ce document n'est partagé avec aucun autre collaborateur.</p>
+                <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4 text-center">
+                  <p className="text-xs text-slate-600 italic">Ce document n'est partagé avec aucun autre collaborateur.</p>
                 </div>
               ) : (
-                <div className="border border-slate-900 rounded-xl bg-slate-950/50 max-h-[180px] overflow-y-auto divide-y divide-slate-900">
+                <div className="border border-slate-200 rounded-xl bg-white max-h-[180px] overflow-y-auto divide-y divide-slate-100">
                   {file.sharedWith.map((share) => (
-                    <div key={share.userId} className="p-3 flex justify-between items-center flex-wrap gap-2 hover:bg-[#0E1321]/45 transition-colors">
+                    <div key={share.userId} className="p-3 flex justify-between items-center flex-wrap gap-2 hover:bg-indigo-50/50 transition-colors">
                       <div>
-                        <span className="text-xs font-semibold text-slate-150 block">{share.username}</span>
-                        <span className="text-[10px] text-slate-455 block font-medium">Partagé le {new Date(share.sharedAt).toLocaleDateString('fr-FR')}</span>
+                        <span className="text-xs font-semibold text-slate-900 block">{share.username}</span>
+                        <span className="text-[10px] text-indigo-600 block font-medium">Partagé le {new Date(share.sharedAt).toLocaleDateString('fr-FR')}</span>
                       </div>
                       
                       <button
                         onClick={() => onRevoke(share.userId)}
                         disabled={revokePending}
-                        className="text-[10px] font-bold text-rose-400 hover:text-rose-350 hover:bg-rose-550/10 border border-rose-500/15 rounded-lg px-2.5 py-1 transition-all flex items-center gap-1 cursor-pointer"
+                        className="text-[10px] font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-lg px-2.5 py-1 transition-all flex items-center gap-1 cursor-pointer"
                       >
                         {revokePending ? 'Révocation...' : 'Révoquer'}
                       </button>
@@ -1125,10 +1125,10 @@ const ShareModal: React.FC<ShareProps> = ({
             
           </div>
 
-          <div className="bg-[#0C101A] px-6 py-4 border-t border-slate-900 flex justify-end gap-3 rounded-b-2xl">
+          <div className="bg-white px-6 py-4 border-t border-slate-200 flex justify-end gap-3 rounded-b-2xl">
             <button
               onClick={onClose}
-              className="px-4 py-1.5 text-xs font-bold text-slate-300 bg-slate-900 border border-slate-850 hover:bg-slate-800 rounded-lg transition-all cursor-pointer"
+              className="px-4 py-1.5 text-xs font-bold text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-all cursor-pointer"
             >
               Fermer
             </button>
@@ -1164,31 +1164,31 @@ const DeleteModal: React.FC<DeleteProps> = ({ file, onClose, onConfirm, isPendin
           initial={{ scale: 0.95, opacity: 0, y: 15 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 15 }}
-          className="relative transform overflow-hidden rounded-2xl bg-[#090D14] text-left shadow-2xl transition-all w-full max-w-sm border border-slate-900 z-10 p-6 font-sans"
+          className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all w-full max-w-sm border border-slate-200 z-10 p-6 font-sans"
         >
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-rose-500/10 text-rose-400 rounded-xl border border-rose-500/20 shrink-0">
+            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-200 shrink-0">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-base font-bold text-white font-sans leading-tight">
+              <h3 className="text-base font-bold text-slate-900 font-sans leading-tight">
                 Supprimer le document
               </h3>
-              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                Êtes-vous sûr de vouloir supprimer le document <strong>{file.filename}</strong> ?
+              <p className="text-xs text-slate-900 mt-2 leading-relaxed">
+                Êtes-vous sûr de vouloir supprimer le document <strong className="text-indigo-700">{file.filename}</strong> ?
               </p>
-              <p className="text-[10px] text-rose-350 font-bold bg-rose-550/10 p-2.5 border border-rose-500/10 rounded-xl mt-3.5 leading-normal flex gap-1.5 items-start">
-                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <p className="text-[10px] text-slate-900 font-semibold bg-rose-50 p-2.5 border border-rose-200 rounded-xl mt-3.5 leading-normal flex gap-1.5 items-start">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
                 <span>Cette action est irréversible et révoquera immédiatement tous les accès de partage.</span>
               </p>
             </div>
           </div>
 
-          <div className="mt-6 flex justify-end gap-3 pt-3.5 border-t border-slate-900">
+          <div className="mt-6 flex justify-end gap-3 pt-3.5 border-t border-slate-200">
             <button
               onClick={onClose}
               disabled={isPending}
-              className="px-3.5 py-1.5 text-xs text-slate-350 hover:bg-slate-900 rounded-lg font-semibold transition-all cursor-pointer"
+              className="px-3.5 py-1.5 text-xs text-slate-900 hover:bg-slate-100 rounded-lg font-semibold transition-all cursor-pointer"
             >
               Conserver
             </button>

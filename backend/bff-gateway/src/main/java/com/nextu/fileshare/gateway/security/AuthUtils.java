@@ -2,10 +2,7 @@ package com.nextu.fileshare.gateway.security;
 
 import com.nextu.fileshare.gateway.common.AppRoles;
 import com.nextu.fileshare.gateway.model.AppUserDto;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -25,7 +22,7 @@ public final class AuthUtils {
             oidcUser.getSubject(),
             oidcUser.getPreferredUsername(),
             oidcUser.getEmail() != null ? oidcUser.getEmail() : "",
-            extractRoles(oidcUser),
+            extractRolesFromAuthorities(oidcUser),
             oidcUser.getIdToken().getIssuedAt().toString()
         );
     }
@@ -45,20 +42,16 @@ public final class AuthUtils {
             .anyMatch("ROLE_ADMIN"::equals);
     }
 
-    @SuppressWarnings("unchecked")
-    private static List<String> extractRoles(OidcUser oidcUser) {
-        List<String> roles = new ArrayList<>();
-        Map<String, Object> realmAccess = oidcUser.getClaim("realm_access");
-        if (realmAccess != null && realmAccess.get("roles") instanceof Collection<?> realmRoles) {
-            for (Object role : realmRoles) {
-                String value = role.toString();
-                if (APP_ROLES.contains(value)) {
-                    roles.add(value);
-                }
-            }
-        }
+    private static List<String> extractRolesFromAuthorities(OidcUser oidcUser) {
+        List<String> roles = oidcUser.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .filter(auth -> auth.startsWith("ROLE_"))
+            .map(auth -> auth.substring("ROLE_".length()))
+            .filter(APP_ROLES::contains)
+            .distinct()
+            .toList();
         if (roles.isEmpty()) {
-            roles.add(AppRoles.USER);
+            return List.of(AppRoles.USER);
         }
         return roles;
     }

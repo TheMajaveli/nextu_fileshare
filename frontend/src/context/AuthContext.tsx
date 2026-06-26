@@ -42,7 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    window.location.href = '/logout';
+    await authService.logout();
   };
 
   const refreshUser = async () => {

@@ -12,8 +12,10 @@ import com.nextu.fileshare.storage.repository.FileShareRepository;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import com.nextu.fileshare.storage.model.entity.FileEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -58,7 +60,6 @@ class FileServiceTest {
         MultipartFile file = mock(MultipartFile.class);
         when(file.isEmpty()).thenReturn(false);
         when(file.getOriginalFilename()).thenReturn("malware.exe");
-        when(file.getSize()).thenReturn(1024L);
 
         ApiException ex = assertThrows(ApiException.class, () ->
             fileService.uploadFile(file, UUID.randomUUID(), "alice")
@@ -74,7 +75,13 @@ class FileServiceTest {
         when(file.getSize()).thenReturn(1024L);
         when(file.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[]{1, 2, 3}));
         when(file.getContentType()).thenReturn("application/pdf");
-        when(fileRepository.save(org.mockito.ArgumentMatchers.any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(fileRepository.save(org.mockito.ArgumentMatchers.any())).thenAnswer(invocation -> {
+            FileEntity entity = invocation.getArgument(0);
+            if (entity.getCreatedAt() == null) {
+                entity.setCreatedAt(Instant.now());
+            }
+            return entity;
+        });
 
         fileService.uploadFile(file, UUID.randomUUID(), "alice");
     }
