@@ -30,9 +30,28 @@ spring:
             jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/nextu-files/protocol/openid-connect/certs}
             user-info-uri: ${KEYCLOAK_USERINFO_URI:http://localhost:8180/realms/nextu-files/protocol/openid-connect/userinfo}
             user-name-attribute: preferred_username
+          keycloak-register:
+            # Same realm/client as "keycloak" but targets the registration form directly.
+            # Routing the authorization request through Spring Security (instead of a hand-built
+            # link) ensures a matching state/nonce is stored, so the OAuth2 callback validates correctly.
+            authorization-uri: ${KEYCLOAK_REGISTRATION_URI:http://localhost:8180/realms/nextu-files/protocol/openid-connect/registrations}
+            token-uri: ${KEYCLOAK_TOKEN_URI:http://localhost:8180/realms/nextu-files/protocol/openid-connect/token}
+            jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/nextu-files/protocol/openid-connect/certs}
+            user-info-uri: ${KEYCLOAK_USERINFO_URI:http://localhost:8180/realms/nextu-files/protocol/openid-connect/userinfo}
+            user-name-attribute: preferred_username
         registration:
           keycloak:
             provider: keycloak
+            client-id: ${KEYCLOAK_CLIENT_ID:gateway-client}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:gateway-client-secret}
+            authorization-grant-type: authorization_code
+            redirect-uri: "${OAUTH2_REDIRECT_URI:http://localhost:5173/login/oauth2/code/{registrationId}}"
+            scope:
+              - openid
+              - profile
+              - email
+          keycloak-register:
+            provider: keycloak-register
             client-id: ${KEYCLOAK_CLIENT_ID:gateway-client}
             client-secret: ${KEYCLOAK_CLIENT_SECRET:gateway-client-secret}
             authorization-grant-type: authorization_code

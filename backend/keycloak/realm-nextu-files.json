@@ -47,7 +47,9 @@
       "secret": "gateway-client-secret",
       "redirectUris": [
         "http://localhost:8090/login/oauth2/code/keycloak",
-        "http://localhost:5173/login/oauth2/code/keycloak"
+        "http://localhost:5173/login/oauth2/code/keycloak",
+        "http://localhost:8090/login/oauth2/code/keycloak-register",
+        "http://localhost:5173/login/oauth2/code/keycloak-register"
       ],
       "attributes": {
         "post.logout.redirect.uris": "http://localhost:5173/login##http://localhost:8090/login"
@@ -152,7 +154,8 @@
         "realm-management": [
           "manage-users",
           "view-users",
-          "query-users"
+          "query-users",
+          "view-realm"
         ]
       }
     }

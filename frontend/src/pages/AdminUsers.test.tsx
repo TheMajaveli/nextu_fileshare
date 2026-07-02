@@ -101,6 +101,37 @@ describe('AdminUsers', () => {
     expect(screen.getByText(/chloe créé avec succès/i)).toBeInTheDocument();
   });
 
+  it('creates a new admin user when ADMIN role is selected', async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.createUser).mockResolvedValue({
+      id: 'admin-2',
+      username: 'ops.admin',
+      email: 'ops@nextu.fr',
+      roles: ['ADMIN'],
+      createdAt: '2026-03-01T10:00:00.000Z',
+      temporaryPassword: 'Temp123!',
+    });
+
+    renderWithProviders(<AdminUsers />);
+
+    await waitFor(() => expect(screen.getAllByText('bob').length).toBeGreaterThan(0));
+    const createButtons = screen.getAllByRole('button', { name: /Créer un utilisateur/i });
+    await user.click(createButtons[0]);
+    await waitFor(() => expect(screen.getByPlaceholderText('Ex: chloe.martin')).toBeInTheDocument());
+
+    await user.type(screen.getByPlaceholderText('Ex: chloe.martin'), 'ops.admin');
+    await user.type(screen.getByPlaceholderText('Ex: chloe.martin@nextu.fr'), 'ops@nextu.fr');
+    await user.click(screen.getByRole('button', { name: /Accès administrateur/i }));
+    await user.click(screen.getByRole('button', { name: /Enregistrer/i }));
+
+    await waitFor(() => expect(api.createUser).toHaveBeenCalled());
+    expect(vi.mocked(api.createUser).mock.calls[0][0]).toEqual({
+      username: 'ops.admin',
+      email: 'ops@nextu.fr',
+      role: 'ADMIN',
+    });
+  });
+
   it('prevents deleting own account', async () => {
     renderWithProviders(<AdminUsers />);
 

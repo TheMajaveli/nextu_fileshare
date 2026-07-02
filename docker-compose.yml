@@ -131,6 +131,12 @@ services:
       OAUTH2_REDIRECT_URI: http://localhost:5173/login/oauth2/code/{registrationId}
     ports:
       - "8090:8090"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8090/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
 
 volumes:
   postgres_data:

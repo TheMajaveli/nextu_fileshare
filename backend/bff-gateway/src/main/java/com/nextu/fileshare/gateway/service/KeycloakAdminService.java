@@ -150,19 +150,33 @@ public class KeycloakAdminService {
         ObjectNode createPayload = objectMapper.createObjectNode()
             .put("username", request.username())
             .put("email", request.email())
+            .put("firstName", "Nouveau")
+            .put("lastName", "Utilisateur")
             .put("enabled", true)
             .put("emailVerified", true);
         createPayload.putArray("requiredActions").add("UPDATE_PASSWORD");
 
-        JsonNode created = webClient.post()
-            .uri("/admin/realms/{realm}/users", properties.getRealm())
-            .headers(headers -> headers.setBearerAuth(token))
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(createPayload)
-            .retrieve()
-            .toBodilessEntity()
-            .then(fetchCreatedUser(request.username(), token))
-            .block();
+        JsonNode created;
+        try {
+            created = webClient.post()
+                .uri("/admin/realms/{realm}/users", properties.getRealm())
+                .headers(headers -> headers.setBearerAuth(token))
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(createPayload)
+                .retrieve()
+                .toBodilessEntity()
+                .then(fetchCreatedUser(request.username(), token))
+                .block();
+        } catch (WebClientResponseException ex) {
+            if (ex.getStatusCode() == HttpStatus.CONFLICT) {
+                throw new ApiException(
+                    "USER_EXISTS",
+                    "Un utilisateur avec ce nom d'utilisateur ou cet email existe déjà.",
+                    HttpStatus.CONFLICT.value()
+                );
+            }
+            throw keycloakUnavailable(ex);
+        }
 
         if (created == null) {
             throw new ApiException("KEYCLOAK_ERROR", "Impossible de créer l'utilisateur.", HttpStatus.BAD_GATEWAY.value());

@@ -58,7 +58,10 @@ class KeycloakLogoutSuccessHandlerTest {
         assertThat(location).isNotNull();
         assertThat(location.toString()).contains("protocol/openid-connect/logout");
         assertThat(location.getQuery()).contains("client_id=gateway-client");
-        assertThat(location.getQuery()).contains("post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A5173%2Flogin");
+        // ':' and '/' are valid, unreserved characters within the query component per RFC 3986,
+        // so UriComponentsBuilder#encode() leaves them as-is — Keycloak parses this correctly
+        // since only '&' and '=' delimit query parameters.
+        assertThat(location.getQuery()).contains("post_logout_redirect_uri=http://localhost:5173/login");
         assertThat(location.getQuery()).contains("id_token_hint=id-token-value");
     }
 }

@@ -192,6 +192,32 @@ cd backend/bff-gateway && mvn -q -DskipTests compile
 cd backend/storage-service && mvn -q -DskipTests compile
 ```
 
+## Testing
+
+Functional requirements are covered by unit tests (Java + Vitest) and the `verify-api.sh` end-to-end script.
+
+| Req | Feature | Unit tests | E2E (`verify-api.sh`) |
+|-----|---------|------------|------------------------|
+| 1 | Create one or more files | `FileServiceTest` (multi-upload), `Dashboard.test.tsx` | Upload `doc-a.pdf` + `doc-b.pdf`, list count |
+| 2 | Allowed types `{pdf,xlsx,xls,doc,docx,mp3,mp4}` | `FileServiceTest` (parameterized), `Dashboard.test.tsx` | Loop all extensions; reject `.txt` |
+| 3 | Share files with another user | `FileServiceTest` (share/revoke), `Dashboard.test.tsx` | Share, revoke, bob denied share (403) |
+| 4 | Owner can delete files | `FileServiceTest` (owner vs non-owner), `Dashboard.test.tsx` | Owner delete; bob denied delete (403) |
+| 5 | Admin create/delete users | `KeycloakAdminServiceTest`, `AdminUsers.test.tsx` | Create, login, self-delete guard, delete |
+| 6 | Self-registration | `registrationUrl.test.ts`, `Login.test.tsx` | Keycloak registration + `/api/me` + cleanup |
+
+```bash
+# Unit tests (no Docker) — run each block from the repository root
+(cd backend/storage-service && mvn test)
+(cd backend/bff-gateway && mvn test)
+(cd frontend && npm test)
+
+# End-to-end (Docker stack required, from repository root)
+docker compose up -d
+./backend/scripts/verify-api.sh   # waits up to ~2 min for BFF readiness
+```
+
+If `docker compose up` reports a container name conflict (`nextu-postgres` already exists), the stack is already running — run `./backend/scripts/verify-api.sh` directly, or stop the existing stack first with `docker compose down`.
+
 See [backend/BACKEND.md](backend/BACKEND.md) for API reference, troubleshooting, and local dev without Docker.
 
 ## Two things to change in the frontend to go live
